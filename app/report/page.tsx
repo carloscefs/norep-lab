@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useHydrated } from "@/hooks/useHydrated";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuthStore, apiFetch } from "@/stores/authStore";
 import { formatDuration } from "@/lib/format";
 
@@ -28,7 +28,7 @@ interface HistoryData {
 }
 
 export default function ReportPage() {
-  const hydrated = useHydrated();
+  const { hydrated } = useRequireAuth();
   const token = useAuthStore((s) => s.token);
   const [data, setData] = useState<HistoryData | null>(null);
   const [loading, setLoading] = useState(true);

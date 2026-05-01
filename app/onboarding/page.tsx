@@ -18,11 +18,13 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useUserStore } from "@/stores/userStore";
 import { usePlanStore } from "@/stores/planStore";
 import { useSessionStore } from "@/stores/sessionStore";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { generatePlan } from "@/lib/generatePlan";
 import type { UserProfile } from "@/data/types";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { hydrated: authHydrated } = useRequireAuth();
   const setProfile = useUserStore((s) => s.setProfile);
   const setPlan = usePlanStore((s) => s.setPlan);
   const endSession = useSessionStore((s) => s.endSession);
@@ -42,6 +44,8 @@ export default function OnboardingPage() {
     cardio: null,
     gymType: null,
   });
+
+  if (!authHydrated) return null;
 
   const canAdvance = step === 1 ? isPhysicalValid(physical) : isPreferencesValid(prefs);
 

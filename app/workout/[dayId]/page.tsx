@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePlanStore } from "@/stores/planStore";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useAuthStore, apiFetch } from "@/stores/authStore";
-import { useHydrated } from "@/hooks/useHydrated";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { getExercise } from "@/data/exercises";
 import { ExerciseCard } from "@/components/workout/ExerciseCard";
 import { WarmupBlock } from "@/components/workout/WarmupBlock";
@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/Button";
 export default function WorkoutPage() {
   const params = useParams<{ dayId: string }>();
   const router = useRouter();
-  const hydrated = useHydrated();
+  const { hydrated } = useRequireAuth();
 
   const days = usePlanStore((s) => s.days);
   const setStatus = usePlanStore((s) => s.setStatus);

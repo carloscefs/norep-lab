@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore, apiFetch } from "@/stores/authStore";
+import { useUserStore } from "@/stores/userStore";
+import { usePlanStore } from "@/stores/planStore";
+import { useSessionStore } from "@/stores/sessionStore";
 import { useHydrated } from "@/hooks/useHydrated";
 import { Button } from "@/components/ui/Button";
 
@@ -11,6 +14,9 @@ export default function LoginPage() {
   const hydrated = useHydrated();
   const token = useAuthStore((s) => s.token);
   const setAuth = useAuthStore((s) => s.setAuth);
+  const clearProfile = useUserStore((s) => s.clear);
+  const clearPlan = usePlanStore((s) => s.setPlan);
+  const clearSession = useSessionStore((s) => s.endSession);
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const [username, setUsername] = useState("");
@@ -44,6 +50,10 @@ export default function LoginPage() {
     }
     if (res.data) {
       setAuth(res.data.token, res.data.username);
+      // Clear any cached plan/session from a previous user on this device
+      clearProfile();
+      clearPlan([]);
+      clearSession();
       router.replace("/");
     }
   };

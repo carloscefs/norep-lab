@@ -3,6 +3,7 @@
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type {
   Goal,
+  GymType,
   Level,
   SessionDuration,
   TrainingDays,
@@ -14,6 +15,7 @@ export interface PreferencesDraft {
   level: Level | null;
   goal: Goal | null;
   cardio: boolean | null;
+  gymType: GymType | null;
 }
 
 interface Props {
@@ -24,6 +26,17 @@ interface Props {
 export function StepPreferences({ draft, onChange }: Props) {
   return (
     <div className="space-y-5">
+      <SegmentedControl<GymType>
+        label="Tipo de academia"
+        columns={2}
+        value={draft.gymType}
+        onChange={(gymType) => onChange({ ...draft, gymType })}
+        options={[
+          { value: "moderna", label: "Moderna 🏋️" },
+          { value: "raiz", label: "Raiz 💪" },
+        ]}
+      />
+
       <SegmentedControl<TrainingDays>
         label="Dias de treino por semana"
         columns={4}
@@ -95,6 +108,7 @@ export function isPreferencesValid(d: PreferencesDraft): boolean {
     d.duration !== null &&
     d.level !== null &&
     d.goal !== null &&
-    d.cardio !== null
+    d.cardio !== null &&
+    d.gymType !== null
   );
 }

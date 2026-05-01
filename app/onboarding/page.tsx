@@ -40,6 +40,7 @@ export default function OnboardingPage() {
     level: null,
     goal: null,
     cardio: null,
+    gymType: null,
   });
 
   const canAdvance = step === 1 ? isPhysicalValid(physical) : isPreferencesValid(prefs);
@@ -56,6 +57,7 @@ export default function OnboardingPage() {
       level: prefs.level!,
       goal: prefs.goal!,
       cardio: prefs.cardio!,
+      gymType: prefs.gymType!,
     };
     setProfile(profile);
     const plan = generatePlan(profile);

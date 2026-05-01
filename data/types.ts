@@ -1,4 +1,5 @@
 export type Sex = "masculino" | "feminino";
+export type GymType = "raiz" | "moderna";
 
 export type MuscleGroup =
   | "peito"
@@ -35,13 +36,14 @@ export type SessionDuration = 45 | 60 | 90 | 120;
 export interface UserProfile {
   sex: Sex;
   age: number;
-  weight: number; // kg
-  height: number; // cm
+  weight: number;
+  height: number;
   days: TrainingDays;
   duration: SessionDuration;
   level: Level;
   goal: Goal;
   cardio: boolean;
+  gymType: GymType;
 }
 
 export interface Exercise {
@@ -49,9 +51,18 @@ export interface Exercise {
   name: string;
   group: MuscleGroup;
   isCompound: boolean;
+  isDumbbell: boolean;
   description: string;
   defaultTechnique?: Technique;
+  youtubeUrl?: string;
+  gymType: "raiz" | "moderna" | "ambos";
   source?: string;
+}
+
+export interface WarmupItem {
+  title: string;
+  description: string;
+  duration: string;
 }
 
 export interface WorkoutExercise {
@@ -72,7 +83,7 @@ export interface WorkoutDay {
   id: string;
   name: string;
   estimatedMinutes: number;
-  warmup: string[];
+  warmup: WarmupItem[];
   exercises: WorkoutExercise[];
   cardio?: CardioBlock;
   status: WorkoutStatus;
@@ -80,7 +91,16 @@ export interface WorkoutDay {
 
 export interface ActiveSession {
   dayId: string;
-  startedAt: number; // epoch ms
+  startedAt: number | null; // null até o user clicar "Iniciar"
   completedExerciseIds: string[];
-  weightOverrides: Record<string, number>; // exerciseId -> kg
+  weightOverrides: Record<string, number>;
+}
+
+export interface WeightEntry {
+  date: string;
+  weight: number;
+}
+
+export interface ExerciseHistory {
+  entries: WeightEntry[];
 }

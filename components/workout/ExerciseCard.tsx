@@ -80,9 +80,22 @@ export function ExerciseCard({
             className="overflow-hidden"
           >
             <div className="space-y-4 border-t border-border px-4 pb-4 pt-4">
-              <p className="text-sm leading-relaxed text-white/85">
-                {exercise.description}
-              </p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="flex-1 text-sm leading-relaxed text-white/85">
+                  {exercise.description}
+                </p>
+                {exercise.youtubeUrl && (
+                  <a
+                    href={exercise.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 flex items-center gap-1.5 rounded-lg bg-red-600/20 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-600/30 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    ▶ Ver
+                  </a>
+                )}
+              </div>
 
               {workout.technique && (
                 <div className="rounded-xl bg-bg-card p-3 text-sm">

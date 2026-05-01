@@ -1,19 +1,26 @@
 import { EXERCISES } from "@/data/exercises";
-import type { Exercise, MuscleGroup } from "@/data/types";
+import type { Exercise, GymType, MuscleGroup } from "@/data/types";
 
 export function pickExercisesForGroups(
   groups: MuscleGroup[],
   totalSlots: number,
-  rngSeed: number
+  rngSeed: number,
+  gymType: GymType = "moderna"
 ): Exercise[] {
   const perGroup = Math.max(1, Math.floor(totalSlots / groups.length));
   const result: Exercise[] = [];
 
   groups.forEach((group, groupIdx) => {
-    const pool = EXERCISES.filter((e) => e.group === group);
+    const pool = EXERCISES.filter(
+      (e) =>
+        e.group === group &&
+        (e.gymType === "ambos" || e.gymType === gymType)
+    );
     const compounds = pool.filter((e) => e.isCompound);
     const isolators = pool.filter((e) => !e.isCompound);
     const ordered = [...compounds, ...isolators];
+
+    if (ordered.length === 0) return;
 
     const offset = (rngSeed + groupIdx) % Math.max(1, ordered.length);
     for (let i = 0; i < perGroup && i < ordered.length; i++) {
@@ -28,7 +35,12 @@ export function pickExercisesForGroups(
   let extraIdx = 0;
   while (result.length < totalSlots) {
     const group = groups[extraIdx % groups.length];
-    const pool = EXERCISES.filter((e) => e.group === group && !result.find((r) => r.id === e.id));
+    const pool = EXERCISES.filter(
+      (e) =>
+        e.group === group &&
+        (e.gymType === "ambos" || e.gymType === gymType) &&
+        !result.find((r) => r.id === e.id)
+    );
     if (pool.length === 0) {
       extraIdx++;
       if (extraIdx > groups.length * 3) break;

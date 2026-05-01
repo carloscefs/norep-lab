@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useUserStore } from "@/stores/userStore";
 import { usePlanStore } from "@/stores/planStore";
 import { useSessionStore } from "@/stores/sessionStore";
+import { useAuthStore } from "@/stores/authStore";
 import { useHydrated } from "@/hooks/useHydrated";
 import { generatePlan } from "@/lib/generatePlan";
 import { WorkoutDayCard } from "@/components/workout/WorkoutDayCard";
 import { Button } from "@/components/ui/Button";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -17,6 +20,11 @@ export default function DashboardPage() {
   const days = usePlanStore((s) => s.days);
   const setPlan = usePlanStore((s) => s.setPlan);
   const endSession = useSessionStore((s) => s.endSession);
+  const token = useAuthStore((s) => s.token);
+  const username = useAuthStore((s) => s.username);
+  const logout = useAuthStore((s) => s.logout);
+
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     if (hydrated && !profile) router.replace("/onboarding");
@@ -48,12 +56,37 @@ export default function DashboardPage() {
             {completed}/{days.length} treinos concluídos
           </p>
         </div>
-        <button
-          onClick={handleRegenerate}
-          className="rounded-full border border-border bg-bg-elevated px-3 py-2 text-xs uppercase tracking-wider text-muted active:bg-bg-card"
-        >
-          Refazer
-        </button>
+        <div className="flex flex-col items-end gap-2">
+          <button
+            onClick={handleRegenerate}
+            className="rounded-full border border-border bg-bg-elevated px-3 py-2 text-xs uppercase tracking-wider text-muted active:bg-bg-card"
+          >
+            Refazer
+          </button>
+          {token ? (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/report"
+                className="text-xs text-accent underline"
+              >
+                Evolução
+              </Link>
+              <button
+                onClick={logout}
+                className="text-xs text-muted underline"
+              >
+                Sair ({username})
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAuth(true)}
+              className="text-xs text-accent underline"
+            >
+              Entrar / Criar conta
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="space-y-3">
@@ -64,10 +97,10 @@ export default function DashboardPage() {
 
       <div className="mt-8 rounded-2xl border border-accent/30 bg-accent/5 p-4">
         <p className="font-display text-lg leading-tight tracking-wide text-white">
-          “Mais peso não é melhor. Falha técnica é.”
+          &quot;Mais peso não é melhor. Falha técnica é.&quot;
         </p>
         <p className="mt-1 text-xs text-muted">
-          Faixa ideal: 6–15 reps até a falha. {"<"}6 = pesado demais. {">"}15 = leve demais.
+          Faixa ideal: 6–15 reps até a falha. &lt;6 = pesado demais. &gt;15 = leve demais.
         </p>
       </div>
 
@@ -80,6 +113,8 @@ export default function DashboardPage() {
           Editar perfil
         </Button>
       </div>
+
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
     </div>
   );
 }

@@ -42,7 +42,7 @@ export function generatePlan(profile: UserProfile): WorkoutDay[] {
       cardioMin
     );
 
-    const picked = pickExercisesForGroups(template.groups, slots, dayIdx);
+    const picked = pickExercisesForGroups(template.groups, slots, dayIdx, profile.gymType);
 
     const exercises: WorkoutExercise[] = picked.map((ex, exIdx) => {
       const technique: Technique =

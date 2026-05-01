@@ -7,6 +7,7 @@ import type { ActiveSession } from "@/data/types";
 interface SessionState {
   session: ActiveSession | null;
   startSession: (dayId: string) => void;
+  beginTimer: () => void;
   toggleExercise: (exerciseId: string) => void;
   setWeight: (exerciseId: string, weight: number) => void;
   endSession: () => void;
@@ -22,11 +23,16 @@ export const useSessionStore = create<SessionState>()(
           return {
             session: {
               dayId,
-              startedAt: Date.now(),
+              startedAt: null,
               completedExerciseIds: [],
               weightOverrides: {},
             },
           };
+        }),
+      beginTimer: () =>
+        set((s) => {
+          if (!s.session || s.session.startedAt !== null) return s;
+          return { session: { ...s.session, startedAt: Date.now() } };
         }),
       toggleExercise: (exerciseId) =>
         set((s) => {

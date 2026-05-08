@@ -96,18 +96,7 @@ export const EXERCISES: Exercise[] = [
     source: "Treino Peito Monstro.md",
   },
 
-  // ===== COSTAS (10) =====
-  {
-    id: "barra-fixa",
-    name: "Barra Fixa",
-    group: "costas",
-    isCompound: true,
-    gymType: "ambos",
-    description: "Pegada pronada, mãos na largura dos ombros. Suba puxando o peito em direção à barra. Desça alongando completamente.",
-    defaultTechnique: "rest-pause",
-    youtubeUrl: YT("barra fixa costas"),
-    source: "Treino Dorsal Animal.md",
-  },
+  // ===== COSTAS (9) =====
   {
     id: "puxada-frente",
     name: "Puxada Frente (Pulley)",

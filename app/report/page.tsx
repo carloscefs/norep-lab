@@ -18,9 +18,10 @@ interface ExerciseRow {
   exercise_id: string;
   exercise_name: string;
   muscle_group: string;
-  max_weight: number;
-  last_weight: number;
-  entries: { date: string; weight_kg: number }[];
+  // pg returns DECIMAL as string; coerce on render.
+  max_weight: number | string;
+  last_weight: number | string;
+  entries: { date: string; weight_kg: number | string }[];
 }
 
 interface HistoryData {
@@ -121,29 +122,33 @@ export default function ReportPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {data.exercises.map((ex) => (
-                    <div
-                      key={ex.exercise_id}
-                      className="rounded-2xl border border-border bg-bg-elevated p-4"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-white text-sm font-medium">{ex.exercise_name}</span>
-                          <span className="ml-2 text-xs text-muted uppercase tracking-wide">{ex.muscle_group}</span>
+                  {data.exercises.map((ex) => {
+                    const maxW = Number(ex.max_weight);
+                    const lastW = Number(ex.last_weight);
+                    return (
+                      <div
+                        key={ex.exercise_id}
+                        className="rounded-2xl border border-border bg-bg-elevated p-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-white text-sm font-medium">{ex.exercise_name}</span>
+                            <span className="ml-2 text-xs text-muted uppercase tracking-wide">{ex.muscle_group}</span>
+                          </div>
+                          <span className="text-accent font-display text-xl tracking-wide">
+                            {maxW} kg
+                          </span>
                         </div>
-                        <span className="text-accent font-display text-xl tracking-wide">
-                          {ex.max_weight} kg
-                        </span>
+                        <div className="mt-1 flex gap-3 text-xs text-muted">
+                          <span>{ex.entries.length} registros</span>
+                          <span>último: {new Date(ex.entries[0]?.date ?? "").toLocaleDateString("pt-BR")}</span>
+                          {lastW < maxW && (
+                            <span className="text-yellow-400">↓ atual {lastW} kg</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="mt-1 flex gap-3 text-xs text-muted">
-                        <span>{ex.entries.length} registros</span>
-                        <span>último: {new Date(ex.entries[0]?.date ?? "").toLocaleDateString("pt-BR")}</span>
-                        {ex.last_weight < ex.max_weight && (
-                          <span className="text-yellow-400">↓ atual {ex.last_weight} kg</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </section>

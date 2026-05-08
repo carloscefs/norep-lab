@@ -15,7 +15,7 @@ export const EXERCISES: Exercise[] = [
     gymType: "ambos",
     description: "Banco a 30–45°. Deite com um halter em cada mão na altura do peito. Empurre para cima convergindo os braços, desça lentamente sentindo o peitoral alongar.",
     defaultTechnique: "excentrica-lenta",
-    youtubeUrl: "https://www.youtube.com/watch?v=8iPEnn-ltC8",
+    youtubeUrl: YT("supino inclinado halteres"),
     source: "MusclePUMP Peito.md",
   },
   {
@@ -26,7 +26,7 @@ export const EXERCISES: Exercise[] = [
     gymType: "ambos",
     description: "Deite no banco plano, halteres na altura do peito. Empurre até estender sem travar cotovelo. Descida controlada em 3–4 segundos.",
     defaultTechnique: "rest-pause",
-    youtubeUrl: "https://www.youtube.com/watch?v=VmB1G1K7v94",
+    youtubeUrl: YT("supino reto halteres"),
     source: "Treino Peito Monstro.md",
   },
   {
@@ -105,7 +105,7 @@ export const EXERCISES: Exercise[] = [
     gymType: "ambos",
     description: "Pegada pronada, mãos na largura dos ombros. Suba puxando o peito em direção à barra. Desça alongando completamente.",
     defaultTechnique: "rest-pause",
-    youtubeUrl: "https://www.youtube.com/watch?v=eGo4IYlbE5g",
+    youtubeUrl: YT("barra fixa costas"),
     source: "Treino Dorsal Animal.md",
   },
   {
@@ -127,7 +127,7 @@ export const EXERCISES: Exercise[] = [
     gymType: "ambos",
     description: "Apoie joelho e mão no banco. Puxe o halter junto à cintura, cotovelo apontando para cima. Retorne alongando.",
     defaultTechnique: "isometria",
-    youtubeUrl: "https://www.youtube.com/watch?v=kBWAon7ItDw",
+    youtubeUrl: YT("remada unilateral halter"),
     source: "Treino Dorsal Animal.md",
   },
   {
@@ -217,7 +217,7 @@ export const EXERCISES: Exercise[] = [
     gymType: "ambos",
     description: "Sentado, halteres na altura dos ombros. Empurre para cima até quase estender. Desça controlado. Não trave o cotovelo no topo.",
     defaultTechnique: "rest-pause",
-    youtubeUrl: "https://www.youtube.com/watch?v=qEwKCR5JCog",
+    youtubeUrl: YT("desenvolvimento halteres ombro"),
     source: "MusclePump Ombro.md",
   },
   {
@@ -228,7 +228,7 @@ export const EXERCISES: Exercise[] = [
     gymType: "ambos",
     description: "Em pé, halteres nas laterais. Eleve os braços até a linha do ombro com leve inclinação à frente. Polegar levemente para baixo. Descida lenta.",
     defaultTechnique: "parciais",
-    youtubeUrl: "https://www.youtube.com/watch?v=3VcKaXpzqRo",
+    youtubeUrl: YT("elevação lateral halteres ombro"),
     source: "MusclePump Ombro.md",
   },
   {
@@ -307,7 +307,7 @@ export const EXERCISES: Exercise[] = [
     gymType: "ambos",
     description: "Em pé, cotovelos colados ao corpo. Suba um halter de cada vez supinando o punho ao subir. Contraia 1 segundo no topo.",
     defaultTechnique: "excentrica-lenta",
-    youtubeUrl: "https://www.youtube.com/watch?v=sAq_ocpRh_I",
+    youtubeUrl: YT("rosca alternada halteres biceps"),
     source: "Meu Braço Grande - Semana 1 , 2 e 3.md",
   },
   {
@@ -454,7 +454,7 @@ export const EXERCISES: Exercise[] = [
     gymType: "moderna",
     description: "Pés na largura do quadril na plataforma. Desça até 90° no joelho — não deixe o quadril sair do banco. Empurre estendendo.",
     defaultTechnique: "drop-set",
-    youtubeUrl: "https://www.youtube.com/watch?v=IZxyjW7MPJQ",
+    youtubeUrl: YT("leg press 45 quadriceps"),
     source: "MusclePUMP Quadríceps.md",
   },
   {
@@ -533,7 +533,7 @@ export const EXERCISES: Exercise[] = [
     gymType: "ambos",
     description: "Em pé, halteres na frente das coxas. Joelhos levemente flexionados. Incline o tronco para frente empurrando o quadril atrás. Sinta o posterior alongar.",
     defaultTechnique: "excentrica-lenta",
-    youtubeUrl: "https://www.youtube.com/watch?v=1uDiW5--rAE",
+    youtubeUrl: YT("stiff halteres posterior"),
     source: "MusclePUMP Posterior de Coxa.md",
   },
   {
@@ -601,7 +601,7 @@ export const EXERCISES: Exercise[] = [
     gymType: "ambos",
     description: "Costas apoiadas no banco, halter no quadril. Suba o quadril até ficar paralelo ao chão. Contraia o glúteo 1–2 segundos no topo.",
     defaultTechnique: "isometria",
-    youtubeUrl: "https://www.youtube.com/watch?v=Zp26q4BY5HE",
+    youtubeUrl: YT("hip thrust glúteo"),
     source: "Treino Bunda Dura.md",
   },
   {

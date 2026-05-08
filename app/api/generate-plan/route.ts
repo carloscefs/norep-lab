@@ -4,6 +4,7 @@ import { verifyToken, getTokenFromHeader } from "@/lib/auth";
 import { EXERCISES } from "@/data/exercises";
 import { getSplit, warmupFor } from "@/lib/splits";
 import { buildGuidance } from "@/lib/loadGuidance";
+import { LAERCIO_REFERENCE } from "@/lib/laercioRef";
 import type {
   UserProfile,
   WorkoutDay,
@@ -64,20 +65,23 @@ export async function POST(req: NextRequest) {
     ),
   }));
 
-  const system = `Você é um personal trainer especializado em treinos NO-REPS (1-2 séries efetivas até a falha técnica).
-Monte uma semana de treino selecionando exercícios do catálogo fornecido.
+  const systemRules = `Você é um personal trainer aplicando a metodologia do Laércio Refundini (canal @laerciorefundini) em treinos NO-REPS (1-2 séries efetivas até a falha técnica).
+
+Use SEMPRE como referência primária os documentos fornecidos abaixo (MusclePUMP, Treinos-tema, Peito Estufado, Meu Braço Grande). Eles definem ordem de exercícios, intensidade, técnicas avançadas (rest-pause, parciais, drop-set, excêntrica lenta, isometria) e progressão preferida pelo Laércio.
 
 REGRAS DE SEGURANÇA E ADEQUAÇÃO (obrigatórias):
-- Para usuários com peso ≥ 95kg ou objetivo "perda-peso": EVITE barra fixa, muscle-up, dips em paralelas, exercícios pliométricos de alto impacto. Prefira variações apoiadas (puxador, remada baixa, remada cavalinho).
-- Para usuários "iniciante": evite levantamento terra com barra livre, agachamento livre com barra pesada, remada curvada com barra livre. Prefira variações em máquina, halter, ou apoiadas.
-- Respeite o sexo declarado, mas NÃO restrinja exercícios por gênero. Coice na polia, elevação de perna em 4 apoios, abdução de quadril são exercícios neutros e podem ser usados para qualquer sexo SE o objetivo for hipertrofia/glúteo. Para homens com objetivo geral de hipertrofia/peito/costas/braço, priorize compostos clássicos (supino, remada, agachamento, desenvolvimento) — NÃO inclua acessórios de glúteo a menos que o split do dia foque em posterior/glúteo.
-- Para "perda-peso": maximize compostos multi-articulares e movimentos com maior gasto calórico.
-- Para "condicionamento": prefira movimentos dinâmicos com transições rápidas.
-- Sempre comece o dia com o exercício composto mais pesado para o grupo principal.
-- NÃO repita o mesmo id na mesma semana se houver alternativas.
+- Peso ≥ 95kg OU objetivo "perda-peso": EVITE barra fixa, muscle-up, dips em paralelas, pliométricos. Prefira variações apoiadas (puxador, remada baixa, remada cavalinho).
+- Iniciante: evite levantamento terra livre, agachamento livre pesado, remada curvada com barra livre. Prefira máquinas, halteres, apoiados.
+- NÃO restrinja exercícios por gênero. Coice na polia, elevação 4 apoios, abdução de quadril são neutros — use APENAS quando o dia foca posterior/glúteo. Homem com hipertrofia geral: priorize compostos clássicos (supino, remada, agachamento, desenvolvimento) — NÃO inclua acessórios de glúteo em dias de Push/Pull/Upper.
+- Perda-peso: maximize compostos multi-articulares com maior gasto calórico.
+- Condicionamento: movimentos dinâmicos com transições rápidas.
+- Sempre comece o dia com o composto mais pesado para o grupo principal (vide MusclePUMP do grupo).
+- NÃO repita o mesmo id na semana se houver alternativa.
 
-Saída APENAS em JSON válido, sem markdown, neste formato exato:
+Saída APENAS JSON válido, sem markdown, formato exato:
 {"days":[{"name":"<nome do dia>","exercise_ids":["id1","id2",...]}]}`;
+
+  const referenceBlock = `===== METODOLOGIA LAÉRCIO REFUNDINI — REFERÊNCIA OBRIGATÓRIA =====${LAERCIO_REFERENCE}\n\n===== FIM DA REFERÊNCIA =====`;
 
   const user = `Perfil do usuário:
 ${JSON.stringify(profile)}
@@ -95,7 +99,14 @@ Retorne ${split.length} dias, cada dia com exatamente "slots" exercícios escolh
     const msg = await client.messages.create({
       model: "claude-sonnet-4-5",
       max_tokens: 2000,
-      system,
+      system: [
+        { type: "text", text: systemRules },
+        {
+          type: "text",
+          text: referenceBlock,
+          cache_control: { type: "ephemeral" },
+        },
+      ],
       messages: [{ role: "user", content: user }],
     });
 

@@ -26,6 +26,7 @@ import type { UserProfile } from "@/data/types";
 export default function OnboardingPage() {
   const router = useRouter();
   const { hydrated: authHydrated } = useRequireAuth();
+  const profile = useUserStore((s) => s.profile);
   const setProfile = useUserStore((s) => s.setProfile);
   const setPlan = usePlanStore((s) => s.setPlan);
   const endSession = useSessionStore((s) => s.endSession);
@@ -34,18 +35,18 @@ export default function OnboardingPage() {
 
   const [step, setStep] = useState<1 | 2>(1);
   const [physical, setPhysical] = useState<PhysicalDraft>({
-    sex: null,
-    age: "",
-    weight: "",
-    height: "",
+    sex: profile?.sex ?? null,
+    age: profile?.age ? String(profile.age) : "",
+    weight: profile?.weight ? String(profile.weight) : "",
+    height: profile?.height ? String(profile.height) : "",
   });
   const [prefs, setPrefs] = useState<PreferencesDraft>({
-    days: null,
-    duration: null,
-    level: null,
-    goal: null,
-    cardio: null,
-    gymType: null,
+    days: profile?.days ?? null,
+    duration: profile?.duration ?? null,
+    level: profile?.level ?? null,
+    goal: profile?.goal ?? null,
+    cardio: profile?.cardio ?? null,
+    gymType: profile?.gymType ?? null,
   });
 
   if (!authHydrated) return null;
@@ -66,7 +67,7 @@ export default function OnboardingPage() {
       cardio: prefs.cardio!,
       gymType: prefs.gymType!,
     };
-    setProfile(profile);
+    setProfile(profile, token);
     setGenerating(true);
     try {
       const plan = await generatePlanRemote(profile, token);

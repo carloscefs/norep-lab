@@ -15,7 +15,9 @@ export default function LoginPage() {
   const token = useAuthStore((s) => s.token);
   const setAuth = useAuthStore((s) => s.setAuth);
   const clearProfile = useUserStore((s) => s.clear);
-  const clearPlan = usePlanStore((s) => s.setPlan);
+  const hydrateProfile = useUserStore((s) => s.hydrateFromServer);
+  const hydratePlan = usePlanStore((s) => s.hydrateFromServer);
+  const resetPlan = usePlanStore((s) => s.reset);
   const clearSession = useSessionStore((s) => s.endSession);
 
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -49,11 +51,16 @@ export default function LoginPage() {
       return;
     }
     if (res.data) {
-      setAuth(res.data.token, res.data.username);
-      // Clear any cached plan/session from a previous user on this device
+      const newToken = res.data.token;
+      setAuth(newToken, res.data.username);
+      // Wipe any cached state from previous user, then rehydrate from server
       clearProfile();
-      clearPlan([]);
+      resetPlan();
       clearSession();
+      await Promise.all([
+        hydrateProfile(newToken).catch(() => null),
+        hydratePlan(newToken).catch(() => {}),
+      ]);
       router.replace("/");
     }
   };

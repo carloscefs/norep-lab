@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUserStore } from "@/stores/userStore";
@@ -7,7 +8,8 @@ import { usePlanStore } from "@/stores/planStore";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useAuthStore } from "@/stores/authStore";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
-import { generatePlan } from "@/lib/generatePlan";
+import { generatePlan as localGeneratePlan } from "@/lib/generatePlan";
+import { generatePlanRemote } from "@/lib/generatePlanRemote";
 import { WorkoutDayCard } from "@/components/workout/WorkoutDayCard";
 import { Button } from "@/components/ui/Button";
 
@@ -17,9 +19,19 @@ export default function DashboardPage() {
   const profile = useUserStore((s) => s.profile);
   const days = usePlanStore((s) => s.days);
   const setPlan = usePlanStore((s) => s.setPlan);
+  const hydrateFromServer = usePlanStore((s) => s.hydrateFromServer);
   const endSession = useSessionStore((s) => s.endSession);
   const username = useAuthStore((s) => s.username);
+  const token = useAuthStore((s) => s.token);
   const logout = useAuthStore((s) => s.logout);
+
+  const [regenerating, setRegenerating] = useState(false);
+
+  useEffect(() => {
+    if (hydrated && token) {
+      hydrateFromServer(token).catch(() => {});
+    }
+  }, [hydrated, token, hydrateFromServer]);
 
   if (!hydrated) return null;
   if (!profile) {
@@ -27,10 +39,18 @@ export default function DashboardPage() {
     return null;
   }
 
-  const handleRegenerate = () => {
-    const plan = generatePlan(profile);
-    setPlan(plan);
-    endSession();
+  const handleRegenerate = async () => {
+    if (!profile) return;
+    setRegenerating(true);
+    try {
+      const plan = await generatePlanRemote(profile, token).catch(() =>
+        localGeneratePlan(profile)
+      );
+      setPlan(plan, token);
+      endSession();
+    } finally {
+      setRegenerating(false);
+    }
   };
 
   const handleLogout = () => {
@@ -57,9 +77,10 @@ export default function DashboardPage() {
         <div className="flex flex-col items-end gap-2">
           <button
             onClick={handleRegenerate}
-            className="rounded-full border border-border bg-bg-elevated px-3 py-2 text-xs uppercase tracking-wider text-muted active:bg-bg-card"
+            disabled={regenerating}
+            className="rounded-full border border-border bg-bg-elevated px-3 py-2 text-xs uppercase tracking-wider text-muted active:bg-bg-card disabled:opacity-50"
           >
-            Refazer
+            {regenerating ? "Gerando..." : "Refazer"}
           </button>
           <div className="flex items-center gap-3">
             <Link href="/report" className="text-xs text-accent underline">

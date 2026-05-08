@@ -60,7 +60,7 @@ export default function WorkoutPage() {
 
   const handleStart = () => {
     beginTimer();
-    setStatus(day.id, "em-andamento");
+    setStatus(day.id, "em-andamento", token);
   };
 
   const handleFinish = async () => {
@@ -69,26 +69,40 @@ export default function WorkoutPage() {
     const seconds = Math.floor((Date.now() - startedAt) / 1000);
     setFinalSeconds(seconds);
     setFinalCompleted(completedIds.length);
-    setStatus(day.id, "concluido");
+    setStatus(day.id, "concluido", token);
 
     if (token) {
-      const exerciseLogs = Object.entries(weights).map(([exerciseId, weight]) => ({
-        exerciseId,
-        weight,
-        sets: 2,
-        reps: 12,
-      }));
+      const finishedAtIso = new Date().toISOString();
+      const startedAtIso = new Date(startedAt).toISOString();
+      const dateIso = finishedAtIso.slice(0, 10);
+
+      const exercisesPayload = day.exercises.map((we) => {
+        const ex = getExercise(we.exerciseId);
+        return {
+          exercise_id: we.exerciseId,
+          exercise_name: ex?.name ?? we.exerciseId,
+          muscle_group: ex?.group ?? null,
+          weight_kg: weights[we.exerciseId] ?? null,
+          sets_completed: we.effectiveSets,
+          technique: we.technique ?? null,
+          completed: completedIds.includes(we.exerciseId),
+        };
+      });
+
       await apiFetch(
         "/api/sessions",
         {
           method: "POST",
           body: JSON.stringify({
-            dayId: day.id,
-            dayName: day.name,
-            durationSeconds: seconds,
-            completedExercises: completedIds.length,
-            totalExercises: day.exercises.length,
-            exerciseLogs,
+            workout_day_id: day.id,
+            workout_day_name: day.name,
+            date: dateIso,
+            started_at: startedAtIso,
+            finished_at: finishedAtIso,
+            duration_seconds: seconds,
+            total_exercises: day.exercises.length,
+            completed_exercises: completedIds.length,
+            exercises: exercisesPayload,
           }),
         },
         token
@@ -114,7 +128,7 @@ export default function WorkoutPage() {
   const doneCount = completedIds.length;
 
   return (
-    <div className="flex min-h-screen flex-col pb-32">
+    <div className="flex min-h-screen flex-col pb-8">
       <header className="sticky top-0 z-20 border-b border-border bg-bg/95 px-5 py-3 backdrop-blur safe-top">
         <div className="flex items-center justify-between">
           <Link
@@ -191,11 +205,11 @@ export default function WorkoutPage() {
         </section>
 
         {day.cardio && <CardioBlock cardio={day.cardio} />}
-      </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 mx-auto max-w-md px-5 pb-4 safe-bottom">
-        <CoachQuote />
-      </div>
+        <div className="pt-2 pb-6 safe-bottom">
+          <CoachQuote />
+        </div>
+      </main>
     </div>
   );
 }

@@ -18,8 +18,9 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useUserStore } from "@/stores/userStore";
 import { usePlanStore } from "@/stores/planStore";
 import { useSessionStore } from "@/stores/sessionStore";
+import { useAuthStore } from "@/stores/authStore";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
-import { generatePlan } from "@/lib/generatePlan";
+import { generatePlanRemote } from "@/lib/generatePlanRemote";
 import type { UserProfile } from "@/data/types";
 
 export default function OnboardingPage() {
@@ -28,6 +29,8 @@ export default function OnboardingPage() {
   const setProfile = useUserStore((s) => s.setProfile);
   const setPlan = usePlanStore((s) => s.setPlan);
   const endSession = useSessionStore((s) => s.endSession);
+  const token = useAuthStore((s) => s.token);
+  const [generating, setGenerating] = useState(false);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [physical, setPhysical] = useState<PhysicalDraft>({
@@ -49,7 +52,7 @@ export default function OnboardingPage() {
 
   const canAdvance = step === 1 ? isPhysicalValid(physical) : isPreferencesValid(prefs);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isPhysicalValid(physical) || !isPreferencesValid(prefs)) return;
     const profile: UserProfile = {
       sex: physical.sex!,
@@ -64,10 +67,15 @@ export default function OnboardingPage() {
       gymType: prefs.gymType!,
     };
     setProfile(profile);
-    const plan = generatePlan(profile);
-    setPlan(plan);
-    endSession();
-    router.push("/dashboard");
+    setGenerating(true);
+    try {
+      const plan = await generatePlanRemote(profile, token);
+      setPlan(plan, token);
+      endSession();
+      router.push("/dashboard");
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (
@@ -134,10 +142,10 @@ export default function OnboardingPage() {
           <Button
             variant="primary"
             className="flex-1"
-            disabled={!canAdvance}
+            disabled={!canAdvance || generating}
             onClick={handleSubmit}
           >
-            Gerar treino
+            {generating ? "Gerando treino..." : "Gerar treino"}
           </Button>
         )}
       </div>

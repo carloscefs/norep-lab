@@ -51,7 +51,6 @@ export interface Exercise {
   name: string;
   group: MuscleGroup;
   isCompound: boolean;
-  isDumbbell: boolean;
   description: string;
   defaultTechnique?: Technique;
   youtubeUrl?: string;

@@ -1,7 +1,7 @@
 # NoRep Lab — Memory Bank
 
 > Snapshot do estado do projeto. Quando mudar arquitetura ou fluxo crítico, atualize este arquivo.
-> Última atualização: 2026-05-07
+> Última atualização: 2026-05-08
 
 ## O que é
 
@@ -69,10 +69,12 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 2. Monta `splitSummary` (dias, grupos por dia, slots calculados pela duração)
 3. Filtra catálogo de exercícios pelo `gymType` e envia ao Claude
 4. **System prompt em duas partes:**
-   - Regras curtas (peso ≥95kg evita barra fixa, iniciante evita compostos livres pesados, sem acessório de glúteo em Push/Pull, etc.) — sem cache
+   - Regras curtas — sem cache. Inclui: peso ≥95kg evita barra fixa/dips/pliométricos; iniciante evita compostos livres pesados; **restrição por gênero** (coice-quadrupede, abducao-maquina, abducao-deitar só para `sex="feminino"`; homens recebem compostos clássicos); hip thrust e elevação pélvica são neutros; acessório de glúteo só em dias de posterior/glúteo.
    - Bloco com 90KB dos docs do Laércio (`lib/laercioRef.ts`) — **com `cache_control: ephemeral`**
 5. Modelo retorna `{days: [{name, exercise_ids:[]}]}`
 6. Servidor monta o `WorkoutDay[]` completo (warmup, técnica, guidance, cardio) e devolve
+
+**Volume base:** prompt diz "2-3 séries efetivas". Implementação: `effectiveSets: 2 | 3` (iniciante=2, intermediário/avançado=3). Mudança recente — planos antigos no banco ainda têm 1|2 até o usuário clicar "Refazer".
 
 **Custo:** primeira chamada paga 90KB de input. Próximas em até 5min hit cache (~10% do custo).
 
@@ -106,6 +108,20 @@ Os 26 restantes são programas pré-prontos (MusclePlus60d) usados só como refe
 **Gotcha:** se o usuário não preencher o input "Carga (kg)" durante o treino, o exercício não vai pra `exercise_history` e some da progressão. Sessão ainda aparece.
 
 **Bug histórico já corrigido:** `pg` retorna `DECIMAL(6,2)` como string. O frontend agora coerce com `Number()` antes de comparar.
+
+## Comportamento UX importante
+
+**Workout page** ([app/workout/[dayId]/page.tsx](app/workout/[dayId]/page.tsx))
+- Cards de exercício começam **todos fechados** (sem auto-open do primeiro).
+- Clicar "Concluir" marca como feito **e** colapsa o card automaticamente. Desmarcar (clicar quando já está ✓ Feito) só desmarca, mantém aberto.
+- CoachQuote fica no fim do `<main>` em fluxo normal (não mais `fixed bottom-0`).
+
+**Dashboard** ([app/dashboard/page.tsx](app/dashboard/page.tsx))
+- Hidrata plano do servidor ao montar (`hydrateFromServer`).
+- Quando todos os dias estão `concluido`, mostra banner verde com:
+  - **"Gerar nova semana"** → chama `generatePlanRemote` (AI ou fallback local)
+  - **"Repetir esta semana"** → `resetWeekStatuses(token)` zera tudo pra `nao-iniciado` e sincroniza
+- Botão "Refazer" no header faz a mesma coisa que "Gerar nova semana" — pode disparar a qualquer momento.
 
 ## Estrutura de pastas
 
@@ -154,6 +170,8 @@ scripts/build-laercio-ref.js
 - **Nenhuma migration de schema** desde V2 — `workout_plans` já existia com JSONB e foi reaproveitada.
 - **Sessions antigas (pré commit 9c5cee6)** foram perdidas — o POST tinha contrato errado (camelCase). Aceito como custo do bug.
 - **Geração da IA não cacheia por usuário** — cada "Refazer" chama a API. Cache é só pelo prompt do Laércio (compartilhado entre todos os usuários).
+- **Push notification (após 10min idle)** — pausado por decisão do usuário. Exigiria service worker + VAPID + cron (Vercel Pro $20/mês ou UptimeRobot). Decisão revisitável.
+- **Volume mudou de 1-2 → 2-3 séries** (commit 8c6ab2a). Planos antigos no banco continuam com 1|2 até regeneração manual via "Refazer".
 
 ## Como rodar localmente
 

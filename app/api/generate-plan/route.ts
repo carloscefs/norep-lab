@@ -65,14 +65,15 @@ export async function POST(req: NextRequest) {
     ),
   }));
 
-  const systemRules = `Você é um personal trainer aplicando a metodologia do Laércio Refundini (canal @laerciorefundini) em treinos NO-REPS (1-2 séries efetivas até a falha técnica).
+  const systemRules = `Você é um personal trainer aplicando a metodologia do Laércio Refundini (canal @laerciorefundini) em treinos NO-REPS (2-3 séries efetivas até a falha técnica).
 
 Use SEMPRE como referência primária os documentos fornecidos abaixo (MusclePUMP, Treinos-tema, Peito Estufado, Meu Braço Grande). Eles definem ordem de exercícios, intensidade, técnicas avançadas (rest-pause, parciais, drop-set, excêntrica lenta, isometria) e progressão preferida pelo Laércio.
 
 REGRAS DE SEGURANÇA E ADEQUAÇÃO (obrigatórias):
 - Peso ≥ 95kg OU objetivo "perda-peso": EVITE barra fixa, muscle-up, dips em paralelas, pliométricos. Prefira variações apoiadas (puxador, remada baixa, remada cavalinho).
 - Iniciante: evite levantamento terra livre, agachamento livre pesado, remada curvada com barra livre. Prefira máquinas, halteres, apoiados.
-- NÃO restrinja exercícios por gênero. Coice na polia, elevação 4 apoios, abdução de quadril são neutros — use APENAS quando o dia foca posterior/glúteo. Homem com hipertrofia geral: priorize compostos clássicos (supino, remada, agachamento, desenvolvimento) — NÃO inclua acessórios de glúteo em dias de Push/Pull/Upper.
+- RESTRIÇÃO POR GÊNERO: exercícios de isolamento de glúteo tradicionalmente femininos — coice quadrúpede ("coice-quadrupede"), abdução na máquina ("abducao-maquina"), abdução deitada com elástico ("abducao-deitar"), elevação de perna em 4 apoios — devem ser usados APENAS para sex="feminino". Para sex="masculino", priorize compostos clássicos (supino, remada, agachamento, desenvolvimento, terra, stiff, hip thrust) e exercícios bilaterais. Hip thrust e elevação pélvica são neutros e podem ser usados para ambos.
+- Mesmo para mulheres, só inclua acessórios de glúteo quando o dia foca posterior/glúteo.
 - Perda-peso: maximize compostos multi-articulares com maior gasto calórico.
 - Condicionamento: movimentos dinâmicos com transições rápidas.
 - Sempre comece o dia com o composto mais pesado para o grupo principal (vide MusclePUMP do grupo).
@@ -120,7 +121,7 @@ Retorne ${split.length} dias, cada dia com exatamente "slots" exercícios escolh
     const ai = JSON.parse(jsonMatch[0]) as AIPlanResponse;
 
     const validIds = new Set(EXERCISES.map((e) => e.id));
-    const effectiveSets: 1 | 2 = profile.level === "iniciante" ? 1 : 2;
+    const effectiveSets: 2 | 3 = profile.level === "iniciante" ? 2 : 3;
     const guidance = buildGuidance();
 
     const days: WorkoutDay[] = split.map((template, dayIdx) => {

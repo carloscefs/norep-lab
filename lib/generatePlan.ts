@@ -32,7 +32,7 @@ function exerciseSlotsForDuration(
 export function generatePlan(profile: UserProfile): WorkoutDay[] {
   const split = getSplit(profile.days);
   const guidance = buildGuidance();
-  const effectiveSets: 1 | 2 = profile.level === "iniciante" ? 1 : 2;
+  const effectiveSets: 2 | 3 = profile.level === "iniciante" ? 2 : 3;
 
   return split.map((template, dayIdx) => {
     const cardioMin = template.cardioType === "HIIT" ? 10 : 15;

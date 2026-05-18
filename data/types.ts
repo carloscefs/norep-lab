@@ -66,7 +66,7 @@ export interface WarmupItem {
 
 export interface WorkoutExercise {
   exerciseId: string;
-  effectiveSets: 1 | 2;
+  effectiveSets: 2 | 3;
   technique?: Technique;
   guidance: string;
 }

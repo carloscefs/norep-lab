@@ -25,7 +25,12 @@ export function ExerciseCard({
   onToggle,
   onWeightChange,
 }: Props) {
-  const [open, setOpen] = useState(index === 0);
+  const [open, setOpen] = useState(false);
+
+  const handleConcluir = () => {
+    if (!done) setOpen(false);
+    onToggle();
+  };
 
   return (
     <motion.div
@@ -138,7 +143,7 @@ export function ExerciseCard({
                 </label>
                 <button
                   type="button"
-                  onClick={onToggle}
+                  onClick={handleConcluir}
                   className={cn(
                     "h-12 self-end rounded-xl px-5 font-display text-lg tracking-wide transition-colors",
                     done

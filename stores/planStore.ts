@@ -9,6 +9,7 @@ interface PlanState {
   days: WorkoutDay[];
   setPlan: (days: WorkoutDay[], token?: string | null) => void;
   setStatus: (dayId: string, status: WorkoutStatus, token?: string | null) => void;
+  resetWeekStatuses: (token?: string | null) => void;
   hydrateFromServer: (token: string) => Promise<void>;
   reset: () => void;
 }
@@ -29,6 +30,20 @@ export const usePlanStore = create<PlanState>()(
         }));
         if (token) {
           apiFetch("/api/plan", { method: "PATCH", body: JSON.stringify({ dayId, status }) }, token).catch(() => {});
+        }
+      },
+      resetWeekStatuses: (token) => {
+        let nextDays: WorkoutDay[] = [];
+        set((s) => {
+          nextDays = s.days.map((d) => ({ ...d, status: "nao-iniciado" as const }));
+          return { days: nextDays };
+        });
+        if (token) {
+          apiFetch(
+            "/api/plan",
+            { method: "POST", body: JSON.stringify({ days: nextDays }) },
+            token
+          ).catch(() => {});
         }
       },
       hydrateFromServer: async (token) => {

@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const profile = useUserStore((s) => s.profile);
   const days = usePlanStore((s) => s.days);
   const setPlan = usePlanStore((s) => s.setPlan);
+  const resetWeekStatuses = usePlanStore((s) => s.resetWeekStatuses);
   const hydrateFromServer = usePlanStore((s) => s.hydrateFromServer);
   const endSession = useSessionStore((s) => s.endSession);
   const username = useAuthStore((s) => s.username);
@@ -59,6 +60,12 @@ export default function DashboardPage() {
   };
 
   const completed = days.filter((d) => d.status === "concluido").length;
+  const weekComplete = days.length > 0 && completed === days.length;
+
+  const handleRepeatWeek = () => {
+    resetWeekStatuses(token);
+    endSession();
+  };
 
   return (
     <div className="flex min-h-screen flex-col px-5 pb-8 pt-8 safe-top">
@@ -95,6 +102,35 @@ export default function DashboardPage() {
           </div>
         </div>
       </header>
+
+      {weekComplete && (
+        <div className="mb-6 rounded-2xl border border-success/40 bg-success/10 p-4">
+          <p className="font-display text-xl tracking-wide text-white">
+            Semana completa.
+          </p>
+          <p className="mt-1 text-sm text-white/75">
+            Você concluiu todos os {days.length} treinos. Como quer seguir?
+          </p>
+          <div className="mt-4 flex gap-2">
+            <Button
+              variant="primary"
+              className="flex-1 h-11 text-sm"
+              disabled={regenerating}
+              onClick={handleRegenerate}
+            >
+              {regenerating ? "Gerando..." : "Gerar nova semana"}
+            </Button>
+            <Button
+              variant="secondary"
+              className="flex-1 h-11 text-sm"
+              disabled={regenerating}
+              onClick={handleRepeatWeek}
+            >
+              Repetir esta semana
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         {days.map((day, i) => (

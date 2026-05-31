@@ -2,11 +2,22 @@ import { Pool } from "pg";
 
 let pool: Pool | null = null;
 
+function needsSSL(url: string): boolean {
+  return (
+    url.includes("supabase.co") ||
+    url.includes("supabase.com") ||
+    url.includes("sslmode=require") ||
+    url.includes("sslmode=verify-full") ||
+    url.includes("ssl=true")
+  );
+}
+
 export function getPool(): Pool {
   if (!pool) {
+    const url = process.env.DATABASE_URL ?? "";
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: false,
+      connectionString: url,
+      ssl: needsSSL(url) ? { rejectUnauthorized: false } : false,
       max: 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,

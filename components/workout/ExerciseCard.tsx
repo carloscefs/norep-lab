@@ -12,6 +12,7 @@ interface Props {
   workout: WorkoutExercise;
   done: boolean;
   weight: number | undefined;
+  lastWeight?: number;
   onToggle: () => void;
   onWeightChange: (kg: number) => void;
 }
@@ -22,6 +23,7 @@ export function ExerciseCard({
   workout,
   done,
   weight,
+  lastWeight,
   onToggle,
   onWeightChange,
 }: Props) {
@@ -121,14 +123,22 @@ export function ExerciseCard({
                   {workout.guidance}
                 </p>
                 <p className="mt-1 text-xs text-muted">
-                  {workout.effectiveSets} série{workout.effectiveSets > 1 ? "s" : ""} efetiva{workout.effectiveSets > 1 ? "s" : ""} até a falha técnica.
+                  <span className="text-sm font-bold text-lime-400">
+                    {workout.effectiveSets} série{workout.effectiveSets > 1 ? "s" : ""} efetiva{workout.effectiveSets > 1 ? "s" : ""}
+                  </span>{" "}
+                  até a falha técnica.
                 </p>
               </div>
 
               <div className="flex items-center gap-3">
                 <label className="flex-1">
-                  <span className="mb-1 block text-xs uppercase tracking-wider text-muted">
-                    Carga (kg)
+                  <span className="mb-1 flex items-center justify-between text-xs uppercase tracking-wider text-muted">
+                    <span>Carga (kg)</span>
+                    {lastWeight !== undefined && lastWeight > 0 && (
+                      <span className="normal-case tracking-normal text-muted/80">
+                        última: <span className="text-white/80">{lastWeight} kg</span>
+                      </span>
+                    )}
                   </span>
                   <input
                     type="number"
@@ -137,7 +147,7 @@ export function ExerciseCard({
                     onChange={(e) =>
                       onWeightChange(parseFloat(e.target.value) || 0)
                     }
-                    placeholder="—"
+                    placeholder={lastWeight ? String(lastWeight) : "—"}
                     className="h-12 w-full rounded-xl border border-border bg-bg-card px-3 text-lg text-white focus:border-accent focus:outline-none"
                   />
                 </label>

@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
        FROM exercise_history eh
        WHERE eh.user_id = $1
        GROUP BY eh.exercise_id, eh.exercise_name, eh.muscle_group
-       ORDER BY eh.muscle_group, eh.exercise_name`,
+       ORDER BY eh.exercise_name ASC`,
       [payload.userId]
     );
 
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
        FROM workout_sessions
        WHERE user_id = $1
        ORDER BY date DESC
-       LIMIT 30`,
+       LIMIT 10`,
       [payload.userId]
     );
 

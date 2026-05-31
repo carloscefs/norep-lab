@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePlanStore } from "@/stores/planStore";
@@ -39,6 +39,8 @@ export default function WorkoutPage() {
   const [finished, setFinished] = useState(false);
   const [finalSeconds, setFinalSeconds] = useState(0);
   const [finalCompleted, setFinalCompleted] = useState(0);
+  const [lastWeights, setLastWeights] = useState<Record<string, number>>({});
+  const seededRef = useRef(false);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -50,6 +52,43 @@ export default function WorkoutPage() {
       startSession(day.id);
     }
   }, [hydrated, day, startSession, router]);
+
+  // Última carga salva por exercício (alimenta o pré-preenchimento do input).
+  useEffect(() => {
+    if (!hydrated || !token) return;
+    apiFetch<{ exercises: { exercise_id: string; last_weight: number | string }[] }>(
+      "/api/history",
+      {},
+      token
+    ).then((res) => {
+      if (!res.data?.exercises) return;
+      const map: Record<string, number> = {};
+      for (const e of res.data.exercises) {
+        const w = Number(e.last_weight);
+        if (w > 0) map[e.exercise_id] = w;
+      }
+      setLastWeights(map);
+    });
+  }, [hydrated, token]);
+
+  // Pré-preenche os inputs de carga com a última salva (uma vez por sessão).
+  useEffect(() => {
+    if (seededRef.current) return;
+    if (!day || day.status === "concluido") return;
+    const sess = session?.dayId === day.id ? session : null;
+    if (!sess || Object.keys(lastWeights).length === 0) return;
+    let didSeed = false;
+    for (const we of day.exercises) {
+      if (
+        sess.weightOverrides[we.exerciseId] === undefined &&
+        lastWeights[we.exerciseId] !== undefined
+      ) {
+        setWeight(we.exerciseId, lastWeights[we.exerciseId]);
+        didSeed = true;
+      }
+    }
+    if (didSeed) seededRef.current = true;
+  }, [day, session, lastWeights, setWeight]);
 
   if (!hydrated || !day) return null;
 
@@ -197,6 +236,7 @@ export default function WorkoutPage() {
                 workout={we}
                 done={completedIds.includes(we.exerciseId)}
                 weight={weights[we.exerciseId]}
+                lastWeight={lastWeights[we.exerciseId]}
                 onToggle={() => toggleExercise(we.exerciseId)}
                 onWeightChange={(kg) => setWeight(we.exerciseId, kg)}
               />

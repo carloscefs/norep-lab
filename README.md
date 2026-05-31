@@ -18,7 +18,7 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 
 - **Next.js 14** (App Router) + **TypeScript**
 - **Tailwind CSS** + **Framer Motion**
-- **Postgres** via `pg` (fonte de verdade) + **Zustand** persist no LocalStorage (cache no cliente)
+- **Postgres** (Supabase) via `pg` (fonte de verdade) + **Zustand** persist no LocalStorage (cache no cliente)
 - **JWT auth** próprio
 - **Claude Sonnet 4.5** via `@anthropic-ai/sdk` para gerar treinos com contexto da metodologia
 
@@ -39,12 +39,14 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 Crie `.env.local`:
 
 ```env
-DATABASE_URL=postgres://user:pass@host:5432/db
+DATABASE_URL=postgresql://user:pass@host:5432/db
 JWT_SECRET=algum_segredo_longo
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 Sem `ANTHROPIC_API_KEY`, a IA cai automaticamente no gerador local determinístico.
+
+> **Supabase:** o `db/client.ts` liga SSL automaticamente para hosts `supabase.com`. Em produção (Vercel) use a string do **Transaction pooler** (`...pooler.supabase.com:6543`) — a conexão direta (`db.<ref>.supabase.co:5432`) é IPv6-only e a serverless do Vercel não a alcança. Localmente qualquer uma das duas funciona.
 
 ### 2. Migração do banco (uma vez)
 
@@ -76,13 +78,15 @@ npm run build
 npm start
 ```
 
-Deploy na Vercel (já linkado):
+Deploy na Vercel (já linkado). O repo GitHub `carloscefs/norep-lab` está conectado, então `git push` na `master` dispara deploy automático:
 
 ```bash
+git push          # auto-deploy via integração GitHub → Vercel
+# ou
 vercel --prod --yes
 ```
 
-Variáveis de ambiente de produção: `DATABASE_URL`, `JWT_SECRET`, `ANTHROPIC_API_KEY`.
+Variáveis de ambiente de produção: `DATABASE_URL` (Supabase Transaction pooler), `JWT_SECRET`, `ANTHROPIC_API_KEY`.
 
 ## Estrutura
 

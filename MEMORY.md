@@ -1,7 +1,7 @@
 # NoRep Lab — Memory Bank
 
 > Snapshot do estado do projeto. Quando mudar arquitetura ou fluxo crítico, atualize este arquivo.
-> Última atualização: 2026-05-08
+> Última atualização: 2026-05-31
 
 ## O que é
 
@@ -11,7 +11,9 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 
 - **URL:** https://muscle-rose.vercel.app
 - **Vercel project:** `muscle` (team `carloscefs-projects`)
-- **DB:** Postgres em Hostinger easypanel (`wtzsfg.easypanel.host:5432/gym`)
+- **DB:** **Supabase** (Postgres). Projeto ref `zzreomehtkaeirjztdds`, região `us-east-1`. Migrado do antigo Hostinger easypanel em 2026-05-31.
+  - ⚠️ **Vercel deve usar o Transaction pooler** (`aws-1-us-east-1.pooler.supabase.com:6543`, user `postgres.<ref>`), **NÃO** a conexão direta (`db.<ref>.supabase.co:5432`). A direta é **IPv6-only** (sem registro A) e a serverless do Vercel não alcança → queries dão throw e rotas retornam 500. O pooler tem IPv4.
+  - `db/client.ts` tem `needsSSL()` que liga SSL automaticamente para qualquer host `supabase.com`.
 - **AI:** Claude Sonnet 4.5 via Anthropic API
 
 ## Stack
@@ -22,7 +24,7 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 | UI | Tailwind CSS + Framer Motion |
 | State (cliente) | Zustand com `persist` (LocalStorage como cache) |
 | Auth | JWT próprio (`jsonwebtoken` + `bcryptjs`) |
-| DB | Postgres via `pg` |
+| DB | Postgres (Supabase) via `pg`, conexão pelo Transaction pooler |
 | IA | `@anthropic-ai/sdk` (Claude Sonnet 4.5) |
 | Deploy | Vercel |
 
@@ -157,7 +159,7 @@ stores/
 └── sessionStore.ts        # active workout session (LocalStorage only)
 
 db/
-├── client.ts              # pg pool
+├── client.ts              # pg pool + needsSSL() (liga SSL para hosts supabase.com)
 └── migrate.ts             # schema setup (rode uma vez)
 
 docs/                      # 49 .md do Laércio
@@ -168,6 +170,7 @@ scripts/build-laercio-ref.js
 
 - **Sem testes automatizados** ainda — projeto pessoal, iteração rápida.
 - **Nenhuma migration de schema** desde V2 — `workout_plans` já existia com JSONB e foi reaproveitada.
+- **Banco migrado para o Supabase** (2026-05-31) via export/import SQL do easypanel. Dados conferidos: users 2, user_profiles 2, workout_plans 2, workout_sessions 9, exercise_logs 63, exercise_history 58; extensão `pgcrypto` presente. Conexão do Vercel exige o **Transaction pooler** (IPv4) — a direta é IPv6-only e quebra na serverless.
 - **Sessions antigas (pré commit 9c5cee6)** foram perdidas — o POST tinha contrato errado (camelCase). Aceito como custo do bug.
 - **Geração da IA não cacheia por usuário** — cada "Refazer" chama a API. Cache é só pelo prompt do Laércio (compartilhado entre todos os usuários).
 - **Push notification (após 10min idle)** — pausado por decisão do usuário. Exigiria service worker + VAPID + cron (Vercel Pro $20/mês ou UptimeRobot). Decisão revisitável.
@@ -185,9 +188,9 @@ npm run dev
 ## Como deployar
 
 ```bash
-vercel --prod --yes     # builda do disco local
+git push                # auto-deploy: GitHub (carloscefs/norep-lab) está linkado ao Vercel
 # ou
-git push                # se webhook estiver ativo (não confirmado)
+vercel --prod --yes     # builda do disco local
 ```
 
-Env vars de produção via `vercel env add` ou no dashboard.
+Env vars de produção via `vercel env add` ou no dashboard. **Atenção:** ao colar a connection string, não deixe `\n`/quebra de linha no fim (o `pg` tolera, mas suja). Mudança de env só vale após novo deploy.

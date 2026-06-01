@@ -13,6 +13,8 @@ interface Props {
   done: boolean;
   weight: number | undefined;
   lastWeight?: number;
+  swapping?: boolean;
+  onSwap?: () => void;
   onToggle: () => void;
   onWeightChange: (kg: number) => void;
 }
@@ -24,6 +26,8 @@ export function ExerciseCard({
   done,
   weight,
   lastWeight,
+  swapping = false,
+  onSwap,
   onToggle,
   onWeightChange,
 }: Props) {
@@ -103,6 +107,20 @@ export function ExerciseCard({
                   </a>
                 )}
               </div>
+
+              {onSwap && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSwap();
+                  }}
+                  disabled={swapping}
+                  className="flex items-center gap-1.5 rounded-lg border border-border bg-bg-card px-3 py-1.5 text-xs font-semibold text-white/80 transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+                >
+                  {swapping ? "Trocando…" : "🔄 Trocar por outro com a mesma função"}
+                </button>
+              )}
 
               {workout.technique && (
                 <div className="rounded-xl bg-bg-card p-3 text-sm">

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePlanStore } from "@/stores/planStore";
 import { useSessionStore } from "@/stores/sessionStore";
+import { useUserStore } from "@/stores/userStore";
 import { useAuthStore, apiFetch } from "@/stores/authStore";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { getExercise } from "@/data/exercises";
@@ -23,6 +24,8 @@ export default function WorkoutPage() {
 
   const days = usePlanStore((s) => s.days);
   const setStatus = usePlanStore((s) => s.setStatus);
+  const swapExercise = usePlanStore((s) => s.swapExercise);
+  const profile = useUserStore((s) => s.profile);
   const session = useSessionStore((s) => s.session);
   const startSession = useSessionStore((s) => s.startSession);
   const beginTimer = useSessionStore((s) => s.beginTimer);
@@ -40,6 +43,8 @@ export default function WorkoutPage() {
   const [finalSeconds, setFinalSeconds] = useState(0);
   const [finalCompleted, setFinalCompleted] = useState(0);
   const [lastWeights, setLastWeights] = useState<Record<string, number>>({});
+  const [swappingId, setSwappingId] = useState<string | null>(null);
+  const [swapError, setSwapError] = useState<string | null>(null);
   const seededRef = useRef(false);
 
   useEffect(() => {
@@ -100,6 +105,32 @@ export default function WorkoutPage() {
   const handleStart = () => {
     beginTimer();
     setStatus(day.id, "em-andamento", token);
+  };
+
+  const handleSwap = async (exerciseId: string) => {
+    if (!day || !token || swappingId) return;
+    setSwapError(null);
+    setSwappingId(exerciseId);
+    try {
+      const usedIds = day.exercises.map((e) => e.exerciseId);
+      const res = await apiFetch<{ exercise_id: string }>(
+        "/api/swap-exercise",
+        {
+          method: "POST",
+          body: JSON.stringify({ exerciseId, usedIds, profile }),
+        },
+        token
+      );
+      if (res.data?.exercise_id) {
+        swapExercise(day.id, exerciseId, res.data.exercise_id, token);
+      } else {
+        setSwapError(res.error ?? "Não foi possível trocar o exercício.");
+      }
+    } catch {
+      setSwapError("Falha ao trocar o exercício.");
+    } finally {
+      setSwappingId(null);
+    }
   };
 
   const handleFinish = async () => {
@@ -225,6 +256,12 @@ export default function WorkoutPage() {
             </h3>
           </header>
 
+          {swapError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+              {swapError}
+            </div>
+          )}
+
           {day.exercises.map((we, i) => {
             const ex = getExercise(we.exerciseId);
             if (!ex) return null;
@@ -237,6 +274,8 @@ export default function WorkoutPage() {
                 done={completedIds.includes(we.exerciseId)}
                 weight={weights[we.exerciseId]}
                 lastWeight={lastWeights[we.exerciseId]}
+                swapping={swappingId === we.exerciseId}
+                onSwap={() => handleSwap(we.exerciseId)}
                 onToggle={() => toggleExercise(we.exerciseId)}
                 onWeightChange={(kg) => setWeight(we.exerciseId, kg)}
               />

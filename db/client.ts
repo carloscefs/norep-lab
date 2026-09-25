@@ -1,6 +1,29 @@
-import { Pool } from "pg";
+import { Pool, type PoolClient } from "pg";
 
 let pool: Pool | null = null;
+
+// Supabase pooler + serverless: cold starts e projetos "acordando" podem demorar.
+const CONNECT_TIMEOUT_MS = 15000;
+const CONNECT_RETRIES = 1;
+
+function isConnectTimeout(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /connection timeout|timeout exceeded when trying to connect/i.test(msg);
+}
+
+async function connectWithRetry(): Promise<PoolClient> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= CONNECT_RETRIES; attempt++) {
+    try {
+      return await getPool().connect();
+    } catch (err) {
+      lastErr = err;
+      if (!isConnectTimeout(err)) throw err;
+      console.error(`[db] connect timeout (tentativa ${attempt + 1})`, err);
+    }
+  }
+  throw lastErr;
+}
 
 function needsSSL(url: string): boolean {
   return (
@@ -20,7 +43,7 @@ export function getPool(): Pool {
       ssl: needsSSL(url) ? { rejectUnauthorized: false } : false,
       max: 10,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: CONNECT_TIMEOUT_MS,
     });
   }
   return pool;
@@ -30,7 +53,7 @@ export async function query<T = Record<string, unknown>>(
   sql: string,
   params?: unknown[]
 ): Promise<T[]> {
-  const client = await getPool().connect();
+  const client = await connectWithRetry();
   try {
     const result = await client.query(sql, params);
     return result.rows as T[];

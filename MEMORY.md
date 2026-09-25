@@ -76,6 +76,14 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 - Workout `handleFinish` só marca concluído/encerra sessão **após** o POST `/api/sessions` dar certo; em erro mostra aviso + "Tentar de novo".
 - Sintoma "Não autorizado" na Evolução + prefill vazio + treinos sumindo = token expirado (aconteceu em 2026-09).
 
+## Continuidade / testes (2026-09-25, 2ª rodada)
+
+- `/api/generate-plan` lê `workout_plans` + `exercise_history` do usuário (`loadPreviousContext`) e anexa `continuityBlock` ao prompt: manter exercícios anteriores, trocar ≤1-2 por dia, preferir ids com carga.
+- `/api/swap-exercise` consulta `exercise_history` e marca candidatos com `hasHistory`; fallback prefere histórico > mesma natureza.
+- Workout page: seed do prefill roda sempre que `day` muda (exercício trocado recebe última carga); só semeia quem não tem valor em `weightOverrides`.
+- `db/client.ts`: `connectionTimeoutMillis` 15s + 1 retry em timeout de conexão (Supabase acordando / cold start).
+- Tooling: `.eslintrc.json` (next/core-web-vitals), Vitest em `tests/` (`npm test`), `lib/customSplit.ts` extraído para ser testável.
+
 ## Geração de treino com IA
 
 [app/api/generate-plan/route.ts](app/api/generate-plan/route.ts):

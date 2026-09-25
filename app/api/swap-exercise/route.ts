@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import { query } from "@/db/client";
 import { EXERCISES } from "@/data/exercises";
 import type { UserProfile } from "@/data/types";
 
@@ -51,9 +52,25 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Fallback determinístico: prefere mesma natureza (composto/isolado).
+  // Exercícios em que o usuário já registrou carga: preferidos, pois o prefill funciona.
+  let historyIds = new Set<string>();
+  try {
+    const rows = await query<{ exercise_id: string }>(
+      `SELECT DISTINCT exercise_id FROM exercise_history WHERE user_id = $1`,
+      [payload.userId]
+    );
+    historyIds = new Set(rows.map((r) => r.exercise_id));
+  } catch (err) {
+    console.error("[/api/swap-exercise] histórico indisponível:", err);
+  }
+
+  // Fallback determinístico: com histórico > mesma natureza (composto/isolado) > qualquer.
+  const sameNature = candidates.filter((c) => c.isCompound === current.isCompound);
   const fallback =
-    candidates.find((c) => c.isCompound === current.isCompound) ?? candidates[0];
+    sameNature.find((c) => historyIds.has(c.id)) ??
+    candidates.find((c) => historyIds.has(c.id)) ??
+    sameNature[0] ??
+    candidates[0];
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -67,6 +84,7 @@ Regras:
 - Escolha UM exercício da lista de candidatos que melhor substitua o atual.
 - Prefira a mesma natureza: se o atual é composto, escolha composto; se é isolado, escolha isolado.
 - Respeite o perfil (nível, peso, objetivo, gênero). Para sex="masculino" nunca escolha isoladores de glúteo femininos.
+- Entre candidatos equivalentes, prefira os marcados com hasHistory=true (o usuário já conhece a carga).
 - NÃO escolha um id fora da lista de candidatos.
 
 Responda APENAS JSON válido, sem markdown: {"exercise_id":"<id>","reason":"<motivo curto>"}`;
@@ -93,6 +111,7 @@ ${JSON.stringify(
     id: c.id,
     name: c.name,
     isCompound: c.isCompound,
+    hasHistory: historyIds.has(c.id),
   }))
 )}`;
 

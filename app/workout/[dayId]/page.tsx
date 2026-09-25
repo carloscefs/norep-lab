@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePlanStore } from "@/stores/planStore";
@@ -47,7 +47,6 @@ export default function WorkoutPage() {
   const [swapError, setSwapError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const seededRef = useRef(false);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -78,23 +77,20 @@ export default function WorkoutPage() {
     });
   }, [hydrated, token]);
 
-  // Pré-preenche os inputs de carga com a última salva (uma vez por sessão).
+  // Pré-preenche os inputs de carga com a última salva. Roda de novo quando o dia
+  // muda (ex.: exercício trocado), semeando só quem ainda não tem valor na sessão.
   useEffect(() => {
-    if (seededRef.current) return;
     if (!day || day.status === "concluido") return;
     const sess = session?.dayId === day.id ? session : null;
     if (!sess || Object.keys(lastWeights).length === 0) return;
-    let didSeed = false;
     for (const we of day.exercises) {
       if (
         sess.weightOverrides[we.exerciseId] === undefined &&
         lastWeights[we.exerciseId] !== undefined
       ) {
         setWeight(we.exerciseId, lastWeights[we.exerciseId]);
-        didSeed = true;
       }
     }
-    if (didSeed) seededRef.current = true;
   }, [day, session, lastWeights, setWeight]);
 
   if (!hydrated || !day) return null;

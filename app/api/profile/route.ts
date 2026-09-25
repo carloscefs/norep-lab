@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/db/client";
 import { verifyToken, getTokenFromHeader } from "@/lib/auth";
-import { FOCUS_TEMPLATES } from "@/lib/splits";
+import { sanitizeCustomSplit } from "@/lib/customSplit";
 
 // Garante a coluna custom_split sem depender de migração manual (idempotente, 1x por instância).
 let schemaReady: Promise<void> | null = null;
@@ -23,12 +23,6 @@ function ensureSchema(): Promise<void> {
   return schemaReady;
 }
 
-function sanitizeCustomSplit(value: unknown, trainingDays: unknown): string[] | null {
-  if (!Array.isArray(value) || value.length === 0) return null;
-  if (value.length !== trainingDays) return null;
-  const valid = value.every((f) => typeof f === "string" && f in FOCUS_TEMPLATES);
-  return valid ? (value as string[]) : null;
-}
 
 export async function GET(req: NextRequest) {
   const token = getTokenFromHeader(req.headers.get("authorization"));

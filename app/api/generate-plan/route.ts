@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import { query, queryOne } from "@/db/client";
 import { EXERCISES } from "@/data/exercises";
 import { getSplitForProfile, warmupFor } from "@/lib/splits";
 import { buildGuidance } from "@/lib/loadGuidance";
@@ -34,6 +35,50 @@ interface AIPlanResponse {
   days: AIPlanDay[];
 }
 
+interface PreviousContext {
+  previousDays: { name: string; exercise_ids: string[] }[];
+  historyIds: string[];
+}
+
+/** Plano atual + exercícios com carga registrada, para a IA manter continuidade. */
+async function loadPreviousContext(userId: string): Promise<PreviousContext> {
+  try {
+    const [plan, history] = await Promise.all([
+      queryOne<{ plan_data: { days?: WorkoutDay[] } }>(
+        `SELECT plan_data FROM workout_plans WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1`,
+        [userId]
+      ),
+      query<{ exercise_id: string }>(
+        `SELECT DISTINCT exercise_id FROM exercise_history WHERE user_id = $1`,
+        [userId]
+      ),
+    ]);
+    const previousDays = (plan?.plan_data?.days ?? []).map((d) => ({
+      name: d.name,
+      exercise_ids: d.exercises.map((e) => e.exerciseId),
+    }));
+    return { previousDays, historyIds: history.map((h) => h.exercise_id) };
+  } catch (err) {
+    console.error("[/api/generate-plan] contexto anterior indisponível:", err);
+    return { previousDays: [], historyIds: [] };
+  }
+}
+
+function continuityBlock(ctx: PreviousContext): string {
+  if (ctx.previousDays.length === 0 && ctx.historyIds.length === 0) return "";
+  const parts: string[] = ["\nCONTINUIDADE (importante para a progressão de cargas):"];
+  if (ctx.previousDays.length > 0) {
+    parts.push(`Plano da semana anterior: ${JSON.stringify(ctx.previousDays)}`);
+  }
+  if (ctx.historyIds.length > 0) {
+    parts.push(`Exercícios em que o usuário já registrou carga: ${JSON.stringify(ctx.historyIds)}`);
+  }
+  parts.push(
+    "Mantenha os exercícios da semana anterior sempre que cobrirem o grupo do dia e forem compatíveis com o perfil e o split. Troque no máximo 1-2 exercícios por dia para variação. Entre alternativas equivalentes, prefira as que já têm carga registrada."
+  );
+  return parts.join("\n");
+}
+
 export async function POST(req: NextRequest) {
   const token = getTokenFromHeader(req.headers.get("authorization"));
   const payload = token ? verifyToken(token) : null;
@@ -43,6 +88,7 @@ export async function POST(req: NextRequest) {
   if (!apiKey) return NextResponse.json({ error: "ANTHROPIC_API_KEY ausente" }, { status: 500 });
 
   const profile = (await req.json()) as UserProfile;
+  const previous = await loadPreviousContext(payload.userId);
   const split = getSplitForProfile(profile);
   const isCustomSplit = Boolean(profile.customSplit?.length);
 
@@ -95,7 +141,7 @@ ${JSON.stringify(splitSummary)}
 Catálogo de exercícios disponíveis (id, name, group, isCompound):
 ${JSON.stringify(catalog)}
 
-Retorne ${split.length} dias, cada dia com exatamente "slots" exercícios escolhidos do catálogo (use os ids exatos). Cubra todos os grupos do dia.`;
+Retorne ${split.length} dias, cada dia com exatamente "slots" exercícios escolhidos do catálogo (use os ids exatos). Cubra todos os grupos do dia.${continuityBlock(previous)}`;
 
   try {
     const client = new Anthropic({ apiKey });

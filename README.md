@@ -32,6 +32,7 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 - Cronômetro de sessão, marcação de exercícios concluídos, registro de carga
 - Página **Evolução** com sessões recentes + progressão de cargas
 - Fallback para gerador determinístico se a IA falhar
+- "Trocar" exercício prefere alternativas em que o usuário já registrou carga; o novo exercício recebe a última carga automaticamente
 - Token expirado (401) desloga automaticamente; falha ao salvar treino mantém a sessão e oferece "Tentar de novo"
 
 ## Como rodar localmente
@@ -138,11 +139,11 @@ A IA ([app/api/generate-plan/route.ts](app/api/generate-plan/route.ts)) usa o me
 - Catálogo filtrado pelo `gymType` do usuário
 - 90KB de docs do Laércio injetados no system prompt (com prompt caching)
 - Regras de segurança explícitas (peso, nível, gênero, objetivo)
+- Bloco de **continuidade**: plano anterior + exercícios com carga registrada (lidos do banco), com instrução de manter os exercícios e trocar no máximo 1-2 por dia
 
 ## Limitações conhecidas
 
-- Sem testes automatizados.
-- Ao gerar nova semana, a IA não recebe o plano anterior: exercícios podem mudar e começar sem "última carga".
+- Testes unitários cobrem só `lib/` (`npm test`, Vitest); rotas e UI sem testes.
 - JWT vale 180 dias; ao expirar o app desloga e pede login novamente.
 - Sessões concluídas antes do commit `9c5cee6` foram perdidas (bug de contrato no POST).
 - "Progressão de cargas" só registra exercícios onde o usuário preencheu carga (kg) durante o treino.

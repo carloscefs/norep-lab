@@ -83,6 +83,7 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 - Workout page: seed do prefill roda sempre que `day` muda (exercício trocado recebe última carga); só semeia quem não tem valor em `weightOverrides`.
 - `db/client.ts`: `connectionTimeoutMillis` 15s + 1 retry em timeout de conexão (Supabase acordando / cold start).
 - Tooling: `.eslintrc.json` (next/core-web-vitals), Vitest em `tests/` (`npm test`), `lib/customSplit.ts` extraído para ser testável.
+- Testes (69): `tests/*.test.ts` (lib), `tests/api/*` (handlers chamados direto com `NextRequest`; `@/db/client` e `@anthropic-ai/sdk` mockados via `vi.mock`; token real via `signToken` com secret fallback), `tests/ui/*` (`// @vitest-environment jsdom`, RTL, cleanup em `tests/setup.ts`). Helpers em `tests/helpers.ts`.
 
 ## Geração de treino com IA
 

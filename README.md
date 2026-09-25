@@ -143,7 +143,7 @@ A IA ([app/api/generate-plan/route.ts](app/api/generate-plan/route.ts)) usa o me
 
 ## Limitações conhecidas
 
-- Testes unitários cobrem só `lib/` (`npm test`, Vitest); rotas e UI sem testes.
+- Testes (`npm test`, Vitest): `lib/`, todas as rotas de API (banco e Anthropic mockados), stores Zustand e componentes `StepPreferences`/`ExerciseCard` (jsdom + Testing Library). Sem E2E de browser.
 - JWT vale 180 dias; ao expirar o app desloga e pede login novamente.
 - Sessões concluídas antes do commit `9c5cee6` foram perdidas (bug de contrato no POST).
 - "Progressão de cargas" só registra exercícios onde o usuário preencheu carga (kg) durante o treino.

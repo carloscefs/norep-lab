@@ -43,6 +43,7 @@ export default function WorkoutPage() {
   const [finalSeconds, setFinalSeconds] = useState(0);
   const [finalCompleted, setFinalCompleted] = useState(0);
   const [lastWeights, setLastWeights] = useState<Record<string, number>>({});
+  const [videoLinks, setVideoLinks] = useState<Record<string, string>>({});
   const [swappingId, setSwappingId] = useState<string | null>(null);
   const [swapError, setSwapError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -74,6 +75,19 @@ export default function WorkoutPage() {
         if (w > 0) map[e.exercise_id] = w;
       }
       setLastWeights(map);
+    });
+  }, [hydrated, token]);
+
+  // Links de vídeo editados no admin (sobrepõem o link de busca do catálogo).
+  useEffect(() => {
+    if (!hydrated || !token) return;
+    apiFetch<{ videos: { exercise_id: string; youtube_url: string }[] }>(
+      "/api/exercise-videos",
+      {},
+      token
+    ).then((res) => {
+      if (!res.data?.videos) return;
+      setVideoLinks(Object.fromEntries(res.data.videos.map((v) => [v.exercise_id, v.youtube_url])));
     });
   }, [hydrated, token]);
 
@@ -281,7 +295,7 @@ export default function WorkoutPage() {
               <ExerciseCard
                 key={we.exerciseId}
                 index={i}
-                exercise={ex}
+                exercise={videoLinks[we.exerciseId] ? { ...ex, youtubeUrl: videoLinks[we.exerciseId] } : ex}
                 workout={we}
                 done={completedIds.includes(we.exerciseId)}
                 weight={weights[we.exerciseId]}

@@ -1,4 +1,17 @@
+import { existsSync, readFileSync } from "fs";
+import { resolve } from "path";
 import { getPool } from "./client";
+
+// Carrega .env.local quando rodado via `npx tsx db/migrate.ts` (Next não está no processo).
+if (!process.env.DATABASE_URL) {
+  const envFile = resolve(process.cwd(), ".env.local");
+  if (existsSync(envFile)) {
+    for (const line of readFileSync(envFile, "utf8").split(/\r?\n/)) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+    }
+  }
+}
 
 const SQL = `
 -- Enable uuid extension
@@ -82,6 +95,16 @@ CREATE TABLE IF NOT EXISTS exercise_history (
   session_id UUID REFERENCES workout_sessions(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, exercise_id, date)
+);
+
+-- Links de vídeo editados (global, não por usuário)
+CREATE TABLE IF NOT EXISTS exercise_videos (
+  exercise_id VARCHAR(100) PRIMARY KEY,
+  youtube_url TEXT NOT NULL,
+  video_title TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'sugerido',
+  updated_by VARCHAR(50),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Index para queries frequentes

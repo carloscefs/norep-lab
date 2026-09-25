@@ -34,6 +34,7 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 - Fallback para gerador determinístico se a IA falhar
 - "Trocar" exercício prefere alternativas em que o usuário já registrou carga; o novo exercício recebe a última carga automaticamente
 - Token expirado (401) desloga automaticamente; falha ao salvar treino mantém a sessão e oferece "Tentar de novo"
+- Tela **/admin/videos** (só para usuários em `ADMIN_USERNAMES`, padrão `carloscefs`): edita o link do YouTube de cada exercício. Sugestões do canal @laerciorefundini vêm pré-carregadas de [data/videoSuggestions.ts](data/videoSuggestions.ts); links confirmados ficam em `exercise_videos` e sobrepõem o link de busca do catálogo no treino
 
 ## Como rodar localmente
 
@@ -54,7 +55,7 @@ Sem `ANTHROPIC_API_KEY`, a IA cai automaticamente no gerador local determinísti
 ### 2. Migração do banco (uma vez)
 
 ```bash
-npx tsx db/migrate.ts
+npx tsx db/migrate.ts   # lê DATABASE_URL de .env.local automaticamente
 ```
 
 ### 3. Bundle dos docs do Laércio (uma vez ou após editar `docs/`)

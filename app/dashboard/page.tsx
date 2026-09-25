@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useUserStore } from "@/stores/userStore";
 import { usePlanStore } from "@/stores/planStore";
 import { useSessionStore } from "@/stores/sessionStore";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore, apiFetch } from "@/stores/authStore";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { generatePlan as localGeneratePlan } from "@/lib/generatePlan";
 import { generatePlanRemote } from "@/lib/generatePlanRemote";
@@ -27,10 +27,14 @@ export default function DashboardPage() {
   const logout = useAuthStore((s) => s.logout);
 
   const [regenerating, setRegenerating] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (hydrated && token) {
       hydrateFromServer(token).catch(() => {});
+      apiFetch<{ isAdmin: boolean }>("/api/exercise-videos", {}, token).then((res) => {
+        setIsAdmin(Boolean(res.data?.isAdmin));
+      });
     }
   }, [hydrated, token, hydrateFromServer]);
 
@@ -90,6 +94,11 @@ export default function DashboardPage() {
             {regenerating ? "Gerando..." : "Refazer"}
           </button>
           <div className="flex items-center gap-3">
+            {isAdmin && (
+              <Link href="/admin/videos" className="text-xs text-accent underline">
+                Vídeos
+              </Link>
+            )}
             <Link href="/report" className="text-xs text-accent underline">
               Evolução
             </Link>

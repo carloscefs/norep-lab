@@ -62,6 +62,7 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 | `/api/generate-plan` | POST | **IA**: chama Claude Sonnet com docs do Laércio injetados |
 | `/api/sessions` | GET, POST | Lista + persiste sessões concluídas |
 | `/api/history` | GET | Agregado para a página Evolução |
+| `/api/exercise-videos` | GET, PUT | Links de vídeo por exercício. GET devolve linhas do banco + sugestões de `data/videoSuggestions.ts` para o resto, mais `isAdmin`. PUT só admin (`lib/admin.ts`, env `ADMIN_USERNAMES`); aceita watch/youtu.be/shorts/embed, normaliza para watch URL; link vazio remove |
 
 ## Split personalizado (2026-09-25)
 
@@ -84,6 +85,15 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 - `db/client.ts`: `connectionTimeoutMillis` 15s + 1 retry em timeout de conexão (Supabase acordando / cold start).
 - Tooling: `.eslintrc.json` (next/core-web-vitals), Vitest em `tests/` (`npm test`), `lib/customSplit.ts` extraído para ser testável.
 - Testes (69): `tests/*.test.ts` (lib), `tests/api/*` (handlers chamados direto com `NextRequest`; `@/db/client` e `@anthropic-ai/sdk` mockados via `vi.mock`; token real via `signToken` com secret fallback), `tests/ui/*` (`// @vitest-environment jsdom`, RTL, cleanup em `tests/setup.ts`). Helpers em `tests/helpers.ts`.
+
+## Vídeos do YouTube por exercício (2026-09-25)
+
+- Tabela global `exercise_videos` (exercise_id PK, youtube_url, video_title, status sugerido|confirmado, updated_by). Criada em `db/migrate.ts` e sob demanda pela rota.
+- `data/videoSuggestions.ts`: 66 sugestões geradas raspando os 2008 vídeos do canal (ytInitialData + youtubei/v1/browse com continuation; estrutura atual é `lockupViewModel`). 9 exercícios sem vídeo específico: supino declinado, crucifixo inclinado/reto, mergulho paralelas, good morning, flexora unilateral, coice quadrúpede, abdução deitada, russian twist.
+- Tela `app/admin/videos/page.tsx` + `components/admin/VideoRow.tsx`: filtro, "só pendentes", confirmar sugestão / salvar / remover / abrir atual. Dashboard mostra link "Vídeos" só para admin.
+- Workout page busca `/api/exercise-videos` e sobrepõe `youtubeUrl` do exercício no card.
+- `exercicios-youtube.csv` tem `link_correto`, `titulo_video`, `confianca`; regenerar com `npx tsx scripts/apply-video-suggestions-csv.ts`.
+- `db/migrate.ts` agora carrega `.env.local` sozinho (antes falhava silenciosamente tentando localhost).
 
 ## Geração de treino com IA
 

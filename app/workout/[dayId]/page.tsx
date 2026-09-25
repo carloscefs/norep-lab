@@ -45,6 +45,8 @@ export default function WorkoutPage() {
   const [lastWeights, setLastWeights] = useState<Record<string, number>>({});
   const [swappingId, setSwappingId] = useState<string | null>(null);
   const [swapError, setSwapError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const seededRef = useRef(false);
 
   useEffect(() => {
@@ -134,14 +136,13 @@ export default function WorkoutPage() {
   };
 
   const handleFinish = async () => {
-    if (!activeSession) return;
+    if (!activeSession || saving) return;
     const startedAt = activeSession.startedAt ?? Date.now();
     const seconds = Math.floor((Date.now() - startedAt) / 1000);
-    setFinalSeconds(seconds);
-    setFinalCompleted(completedIds.length);
-    setStatus(day.id, "concluido", token);
+    setSaveError(null);
 
     if (token) {
+      setSaving(true);
       const finishedAtIso = new Date().toISOString();
       const startedAtIso = new Date(startedAt).toISOString();
       const dateIso = finishedAtIso.slice(0, 10);
@@ -159,7 +160,7 @@ export default function WorkoutPage() {
         };
       });
 
-      await apiFetch(
+      const res = await apiFetch(
         "/api/sessions",
         {
           method: "POST",
@@ -177,8 +178,17 @@ export default function WorkoutPage() {
         },
         token
       );
+      setSaving(false);
+      if (res.error) {
+        // Mantém a sessão local para o usuário tentar salvar de novo.
+        setSaveError(`Não foi possível salvar o treino: ${res.error}`);
+        return;
+      }
     }
 
+    setFinalSeconds(seconds);
+    setFinalCompleted(completedIds.length);
+    setStatus(day.id, "concluido", token);
     endSession();
     setFinished(true);
   };
@@ -230,12 +240,18 @@ export default function WorkoutPage() {
             <Button
               variant="success"
               onClick={handleFinish}
+              disabled={saving}
               className="h-11 px-4 text-sm"
             >
-              Finalizar
+              {saving ? "Salvando..." : saveError ? "Tentar de novo" : "Finalizar"}
             </Button>
           )}
         </div>
+        {saveError && (
+          <p className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+            {saveError}
+          </p>
+        )}
       </header>
 
       {!timerStarted && (

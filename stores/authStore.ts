@@ -38,6 +38,12 @@ export async function apiFetch<T = unknown>(
 
   try {
     const res = await fetch(path, { ...options, headers });
+    if (res.status === 401 && token) {
+      // Token expirado/inválido: derruba a sessão local para o app
+      // redirecionar ao login em vez de seguir com um token morto.
+      useAuthStore.getState().logout();
+      return { error: "Sessão expirada. Faça login novamente." };
+    }
     const json = await res.json();
     if (!res.ok) return { error: json.error ?? "Erro" };
     return { data: json as T };

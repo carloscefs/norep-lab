@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { queryOne } from "@/db/client";
+import { queryOne, isConnectTimeout } from "@/db/client";
 import { signToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
@@ -25,7 +25,13 @@ export async function POST(req: NextRequest) {
     const token = signToken({ userId: user.id, username: user.username });
     return NextResponse.json({ token, username: user.username });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/auth/login]", err);
+    if (isConnectTimeout(err)) {
+      return NextResponse.json(
+        { error: "Banco de dados indisponível no momento. Tente de novo em instantes." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }

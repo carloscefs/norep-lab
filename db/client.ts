@@ -3,10 +3,11 @@ import { Pool, type PoolClient } from "pg";
 let pool: Pool | null = null;
 
 // Supabase pooler + serverless: cold starts e projetos "acordando" podem demorar.
-const CONNECT_TIMEOUT_MS = 15000;
+// 2 tentativas x 4s cabem no limite de 10s da função Vercel (Hobby).
+const CONNECT_TIMEOUT_MS = 4000;
 const CONNECT_RETRIES = 1;
 
-function isConnectTimeout(err: unknown): boolean {
+export function isConnectTimeout(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
   return /connection timeout|timeout exceeded when trying to connect/i.test(msg);
 }

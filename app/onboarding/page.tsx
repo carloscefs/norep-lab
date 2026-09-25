@@ -21,7 +21,7 @@ import { useSessionStore } from "@/stores/sessionStore";
 import { useAuthStore } from "@/stores/authStore";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { generatePlanRemote } from "@/lib/generatePlanRemote";
-import type { UserProfile } from "@/data/types";
+import type { DayFocus, UserProfile } from "@/data/types";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -47,6 +47,8 @@ export default function OnboardingPage() {
     goal: profile?.goal ?? null,
     cardio: profile?.cardio ?? null,
     gymType: profile?.gymType ?? null,
+    splitMode: profile?.customSplit?.length ? "custom" : "auto",
+    customSplit: profile?.customSplit ?? [],
   });
 
   if (!authHydrated) return null;
@@ -66,6 +68,9 @@ export default function OnboardingPage() {
       goal: prefs.goal!,
       cardio: prefs.cardio!,
       gymType: prefs.gymType!,
+      ...(prefs.splitMode === "custom"
+        ? { customSplit: prefs.customSplit.filter((f): f is DayFocus => f !== null) }
+        : {}),
     };
     setProfile(profile, token);
     setGenerating(true);

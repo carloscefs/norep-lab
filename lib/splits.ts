@@ -1,4 +1,10 @@
-import type { MuscleGroup, TrainingDays, WarmupItem } from "@/data/types";
+import type {
+  DayFocus,
+  MuscleGroup,
+  TrainingDays,
+  UserProfile,
+  WarmupItem,
+} from "@/data/types";
 
 export interface DayTemplate {
   name: string;
@@ -69,6 +75,87 @@ const LEGS: DayTemplate = {
 const PUSH_B: DayTemplate = { ...PUSH, name: "Push B" };
 const PULL_B: DayTemplate = { ...PULL, name: "Pull B" };
 const LEGS_B: DayTemplate = { ...LEGS, name: "Legs B" };
+
+export const FOCUS_TEMPLATES: Record<DayFocus, DayTemplate> = {
+  perna: {
+    name: "Perna",
+    groups: ["quadriceps", "posterior", "gluteo", "panturrilha"],
+    cardioType: "continuo",
+  },
+  "gluteo-posterior": {
+    name: "Glúteo + Posterior",
+    groups: ["gluteo", "posterior", "quadriceps", "panturrilha"],
+    cardioType: "continuo",
+  },
+  braco: {
+    name: "Braço",
+    groups: ["biceps", "triceps", "antebraco", "ombro"],
+    cardioType: "HIIT",
+  },
+  "peito-triceps": {
+    name: "Peito + Tríceps",
+    groups: ["peito", "triceps", "ombro"],
+    cardioType: "HIIT",
+  },
+  "costas-biceps": {
+    name: "Costas + Bíceps",
+    groups: ["costas", "biceps", "trapezio", "antebraco"],
+    cardioType: "HIIT",
+  },
+  ombro: {
+    name: "Ombro",
+    groups: ["ombro", "trapezio", "core"],
+    cardioType: "HIIT",
+  },
+  superior: { ...UPPER_A, name: "Superior" },
+  inferior: { ...LOWER_A, name: "Inferior" },
+  "full-body": { ...FULL_BODY_A, name: "Full Body" },
+};
+
+export const FOCUS_LABEL: Record<DayFocus, string> = {
+  perna: "Perna",
+  "gluteo-posterior": "Glúteo + Posterior",
+  braco: "Braço",
+  "peito-triceps": "Peito + Tríceps",
+  "costas-biceps": "Costas + Bíceps",
+  ombro: "Ombro",
+  superior: "Superior",
+  inferior: "Inferior",
+  "full-body": "Full Body",
+};
+
+export const FOCUS_OPTIONS = Object.keys(FOCUS_LABEL) as DayFocus[];
+
+/** Monta o split a partir de uma lista de focos, sufixando A/B/C quando o foco se repete. */
+export function buildCustomSplit(focuses: DayFocus[]): DayTemplate[] {
+  const counts = focuses.reduce<Record<string, number>>(
+    (acc, f) => ({ ...acc, [f]: (acc[f] ?? 0) + 1 }),
+    {}
+  );
+  const seen: Record<string, number> = {};
+  return focuses.map((focus) => {
+    const base = FOCUS_TEMPLATES[focus];
+    seen[focus] = (seen[focus] ?? 0) + 1;
+    const suffix =
+      counts[focus] > 1 ? ` ${String.fromCharCode(64 + seen[focus])}` : "";
+    return { ...base, name: `${base.name}${suffix}` };
+  });
+}
+
+/** Split do perfil: personalizado quando definido e consistente, senão automático. */
+export function getSplitForProfile(
+  profile: Pick<UserProfile, "days" | "customSplit">
+): DayTemplate[] {
+  const custom = profile.customSplit;
+  if (
+    custom &&
+    custom.length === profile.days &&
+    custom.every((f) => f in FOCUS_TEMPLATES)
+  ) {
+    return buildCustomSplit(custom);
+  }
+  return getSplit(profile.days);
+}
 
 export function getSplit(days: TrainingDays): DayTemplate[] {
   switch (days) {

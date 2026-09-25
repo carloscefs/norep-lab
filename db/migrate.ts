@@ -27,8 +27,10 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   goal VARCHAR(30),
   cardio BOOLEAN DEFAULT false,
   gym_type VARCHAR(20) DEFAULT 'moderna',
+  custom_split JSONB,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS custom_split JSONB;
 
 -- Workout plans (generated plan snapshot)
 CREATE TABLE IF NOT EXISTS workout_plans (

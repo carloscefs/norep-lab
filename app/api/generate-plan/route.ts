@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { verifyToken, getTokenFromHeader } from "@/lib/auth";
 import { EXERCISES } from "@/data/exercises";
-import { getSplit, warmupFor } from "@/lib/splits";
+import { getSplitForProfile, warmupFor } from "@/lib/splits";
 import { buildGuidance } from "@/lib/loadGuidance";
 import { LAERCIO_REFERENCE } from "@/lib/laercioRef";
 import type {
@@ -43,7 +43,8 @@ export async function POST(req: NextRequest) {
   if (!apiKey) return NextResponse.json({ error: "ANTHROPIC_API_KEY ausente" }, { status: 500 });
 
   const profile = (await req.json()) as UserProfile;
-  const split = getSplit(profile.days);
+  const split = getSplitForProfile(profile);
+  const isCustomSplit = Boolean(profile.customSplit?.length);
 
   const catalog = EXERCISES.filter(
     (e) => e.gymType === "ambos" || e.gymType === profile.gymType
@@ -78,6 +79,7 @@ REGRAS DE SEGURANÇA E ADEQUAÇÃO (obrigatórias):
 - Condicionamento: movimentos dinâmicos com transições rápidas.
 - Sempre comece o dia com o composto mais pesado para o grupo principal (vide MusclePUMP do grupo).
 - NÃO repita o mesmo id na semana se houver alternativa.
+- SPLIT PERSONALIZADO: se o usuário definiu focos repetidos na semana (ex.: 3 dias de perna), monte cada dia com ênfase diferente (ex.: quadríceps-dominante / posterior-glúteo / unilaterais + panturrilha) e varie os exercícios entre os dias; repita um id só quando o catálogo não oferecer alternativa para o grupo.
 
 Saída APENAS JSON válido, sem markdown, formato exato:
 {"days":[{"name":"<nome do dia>","exercise_ids":["id1","id2",...]}]}`;
@@ -87,7 +89,7 @@ Saída APENAS JSON válido, sem markdown, formato exato:
   const user = `Perfil do usuário:
 ${JSON.stringify(profile)}
 
-Split da semana (use estes nomes e quantidade de slots por dia):
+Split da semana${isCustomSplit ? " (PERSONALIZADO pelo usuário: respeite exatamente os grupos de cada dia)" : ""} (use estes nomes e quantidade de slots por dia):
 ${JSON.stringify(splitSummary)}
 
 Catálogo de exercícios disponíveis (id, name, group, isCompound):

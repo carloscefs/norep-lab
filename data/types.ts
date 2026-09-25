@@ -31,6 +31,18 @@ export type Goal =
   | "condicionamento";
 
 export type TrainingDays = 3 | 4 | 5 | 6;
+
+/** Foco de um dia no split personalizado. */
+export type DayFocus =
+  | "perna"
+  | "gluteo-posterior"
+  | "braco"
+  | "peito-triceps"
+  | "costas-biceps"
+  | "ombro"
+  | "superior"
+  | "inferior"
+  | "full-body";
 export type SessionDuration = 45 | 60 | 90 | 120;
 
 export interface UserProfile {
@@ -44,6 +56,8 @@ export interface UserProfile {
   goal: Goal;
   cardio: boolean;
   gymType: GymType;
+  /** Split personalizado: um foco por dia (length === days). Ausente = split automático. */
+  customSplit?: DayFocus[];
 }
 
 export interface Exercise {

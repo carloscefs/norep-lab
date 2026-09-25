@@ -4,7 +4,7 @@ import type {
   WorkoutExercise,
   Technique,
 } from "@/data/types";
-import { getSplit, warmupFor } from "./splits";
+import { getSplitForProfile, warmupFor } from "./splits";
 import { pickExercisesForGroups } from "./selectExercises";
 import { buildGuidance } from "./loadGuidance";
 
@@ -30,7 +30,7 @@ function exerciseSlotsForDuration(
 }
 
 export function generatePlan(profile: UserProfile): WorkoutDay[] {
-  const split = getSplit(profile.days);
+  const split = getSplitForProfile(profile);
   const guidance = buildGuidance();
   const effectiveSets: 2 | 3 = profile.level === "iniciante" ? 2 : 3;
 

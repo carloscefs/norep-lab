@@ -45,7 +45,7 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 ### Tabelas Postgres (db/migrate.ts)
 
 - `users` — auth (id, username, password_hash)
-- `user_profiles` — 1:1 com users (sex, age, weight_kg, height_cm, training_days, session_duration_min, level, goal, cardio, gym_type)
+- `user_profiles` — 1:1 com users (sex, age, weight_kg, height_cm, training_days, session_duration_min, level, goal, cardio, gym_type, custom_split JSONB). `custom_split` é criada sob demanda por `/api/profile` (DO-block idempotente) porque a migração manual nem sempre roda.
 - `workout_plans` — JSONB do plano gerado, 1 linha ativa por usuário (DELETE+INSERT em update)
 - `workout_sessions` — 1 linha por treino concluído (date, duration_seconds, completed_exercises, total_exercises)
 - `exercise_logs` — N linhas por sessão (1 por exercício do dia)
@@ -57,11 +57,24 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 |------|---------|--------|
 | `/api/auth/login` | POST | Login com username/password |
 | `/api/auth/register` | POST | Criar conta |
-| `/api/profile` | GET, POST | Profile do usuário (snake_case no payload) |
+| `/api/profile` | GET, POST | Profile do usuário (snake_case no payload). `custom_split` validado contra `FOCUS_TEMPLATES` e `training_days` |
 | `/api/plan` | GET, POST, PATCH | Plano + status dos dias (sync entre dispositivos) |
 | `/api/generate-plan` | POST | **IA**: chama Claude Sonnet com docs do Laércio injetados |
 | `/api/sessions` | GET, POST | Lista + persiste sessões concluídas |
 | `/api/history` | GET | Agregado para a página Evolução |
+
+## Split personalizado (2026-09-25)
+
+- `UserProfile.customSplit?: DayFocus[]` (length === days). Focos em `FOCUS_TEMPLATES` / `FOCUS_LABEL` ([lib/splits.ts](lib/splits.ts)).
+- `getSplitForProfile(profile)` é usado pelos dois geradores (local e IA). Se `customSplit` estiver inconsistente (tamanho ≠ days ou foco inválido), cai no split automático.
+- Focos repetidos viram "Perna A/B/C"; o prompt da IA pede ênfases diferentes por dia repetido.
+- UI: `StepPreferences` tem toggle Automática/Personalizada + um `<select>` por dia; `resizeSplit` ajusta a lista quando muda o nº de dias.
+
+## Auth / falhas silenciosas (2026-09-25)
+
+- JWT expira em **180d** (`lib/auth.ts`). `apiFetch` desloga em 401 (só quando havia token) → `useRequireAuth` redireciona pro login.
+- Workout `handleFinish` só marca concluído/encerra sessão **após** o POST `/api/sessions` dar certo; em erro mostra aviso + "Tentar de novo".
+- Sintoma "Não autorizado" na Evolução + prefill vazio + treinos sumindo = token expirado (aconteceu em 2026-09).
 
 ## Geração de treino com IA
 

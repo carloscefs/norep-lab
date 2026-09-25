@@ -16,6 +16,7 @@ interface ProfileRow {
   goal: UserProfile["goal"];
   cardio: boolean;
   gym_type: UserProfile["gymType"];
+  custom_split?: UserProfile["customSplit"] | null;
 }
 
 function rowToProfile(row: ProfileRow): UserProfile {
@@ -30,6 +31,7 @@ function rowToProfile(row: ProfileRow): UserProfile {
     goal: row.goal,
     cardio: row.cardio,
     gymType: row.gym_type,
+    ...(row.custom_split?.length ? { customSplit: row.custom_split } : {}),
   };
 }
 
@@ -45,6 +47,7 @@ function profileToBody(p: UserProfile) {
     goal: p.goal,
     cardio: p.cardio,
     gym_type: p.gymType,
+    custom_split: p.customSplit ?? null,
   };
 }
 

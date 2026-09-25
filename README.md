@@ -26,11 +26,13 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 
 - Login/registro próprio com JWT
 - Onboarding em 2 etapas (físico + preferências) — pré-preenche se já existe perfil
+- Divisão da semana **Automática** (por nº de dias) ou **Personalizada** (um foco por dia: Perna, Braço, Peito+Tríceps, Costas+Bíceps, Ombro, Glúteo+Posterior, Superior, Inferior, Full Body; focos repetidos viram A/B/C)
 - Geração de treino por IA com regras de segurança (peso ≥95kg evita barra fixa, iniciante evita compostos livres pesados, etc.)
 - Sync automático entre dispositivos (plano + status dos dias + perfil)
 - Cronômetro de sessão, marcação de exercícios concluídos, registro de carga
 - Página **Evolução** com sessões recentes + progressão de cargas
 - Fallback para gerador determinístico se a IA falhar
+- Token expirado (401) desloga automaticamente; falha ao salvar treino mantém a sessão e oferece "Tentar de novo"
 
 ## Como rodar localmente
 
@@ -130,6 +132,8 @@ Links do YouTube usam search no canal `@laerciorefundini` para qualquer exercíc
 | 5    | Push / Pull / Legs + Upper + Lower |
 | 6    | PPL ×2 |
 
+Com `profile.customSplit` definido (modo Personalizada no onboarding), `getSplitForProfile` em [lib/splits.ts](lib/splits.ts) monta o split a partir de `FOCUS_TEMPLATES` e sufixa A/B/C quando o foco se repete. Persistido em `user_profiles.custom_split` (JSONB; a rota `/api/profile` cria a coluna sob demanda).
+
 A IA ([app/api/generate-plan/route.ts](app/api/generate-plan/route.ts)) usa o mesmo split mas escolhe os IDs dos exercícios via Claude com:
 - Catálogo filtrado pelo `gymType` do usuário
 - 90KB de docs do Laércio injetados no system prompt (com prompt caching)
@@ -138,6 +142,8 @@ A IA ([app/api/generate-plan/route.ts](app/api/generate-plan/route.ts)) usa o me
 ## Limitações conhecidas
 
 - Sem testes automatizados.
+- Ao gerar nova semana, a IA não recebe o plano anterior: exercícios podem mudar e começar sem "última carga".
+- JWT vale 180 dias; ao expirar o app desloga e pede login novamente.
 - Sessões concluídas antes do commit `9c5cee6` foram perdidas (bug de contrato no POST).
 - "Progressão de cargas" só registra exercícios onde o usuário preencheu carga (kg) durante o treino.
 

@@ -90,7 +90,7 @@ git push          # auto-deploy via integração GitHub → Vercel
 vercel --prod --yes
 ```
 
-Variáveis de ambiente de produção: `DATABASE_URL` (Supabase Transaction pooler), `JWT_SECRET`, `ANTHROPIC_API_KEY`.
+Variáveis de ambiente de produção: `DATABASE_URL` (Supabase Transaction pooler), `JWT_SECRET`, `ANTHROPIC_API_KEY`. Opcional: `ADMIN_USERNAMES` (lista separada por vírgula; padrão `carloscefs`) para a tela /admin/videos.
 
 ## Estrutura
 

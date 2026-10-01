@@ -64,6 +64,23 @@ App de treinos baseado na metodologia **NO-REPS** (treino até a falha técnica,
 | `/api/history` | GET | Agregado para a página Evolução |
 | `/api/exercise-videos` | GET, PUT | Links de vídeo por exercício. GET devolve linhas do banco + sugestões de `data/videoSuggestions.ts` para o resto, mais `isAdmin`. PUT só admin (`lib/admin.ts`, env `ADMIN_USERNAMES`); aceita watch/youtu.be/shorts/embed, normaliza para watch URL; link vazio remove |
 
+## Onde paramos (2026-09-25) e próximos passos
+
+**Entregue nesta sessão (tudo em produção, master = origin/master):**
+- `682d3d8` auto-logout em 401, erro visível ao salvar treino, JWT 180d
+- `29db834` split semanal personalizado (um foco por dia) no onboarding
+- `dd0bf9a` continuidade do plano na IA, troca de exercício com histórico, retry de conexão, ESLint + Vitest
+- `b531783` testes de rotas/stores/componentes
+- `af1d6b8` tela /admin/videos + 66 sugestões de vídeo do canal + migrate.ts lendo .env.local
+
+**Pendências para a próxima sessão:**
+1. Carlo revisar os 66 links sugeridos em /admin/videos (filtro "Só pendentes"; os 21 de confiança média primeiro). 9 exercícios sem vídeo no canal seguem com link de busca.
+2. Esposa do Carlo criar conta e usar "Divisão da semana: Personalizada" (5 dias: Perna/Braço/Perna/Braço/Perna).
+3. Sem E2E de browser (Playwright). Suíte atual: 90 testes unitários/componentes (`npm test`).
+4. Treinos feitos entre 27/08 e 25/09 foram perdidos (token expirado) e não têm recuperação.
+
+**Checklist de qualidade antes de commitar:** `npx tsc --noEmit -p .` · `npx next lint` · `npm test` · `npx next build`. Push em `master` faz deploy automático no Vercel.
+
 ## Split personalizado (2026-09-25)
 
 - `UserProfile.customSplit?: DayFocus[]` (length === days). Focos em `FOCUS_TEMPLATES` / `FOCUS_LABEL` ([lib/splits.ts](lib/splits.ts)).
